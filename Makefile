@@ -4,8 +4,10 @@ run:
 	erl -noshell -s gui
 # -s init stop
 
+ERLC_FLAGS = +debug_info
+
 %.beam: %.erl
-	erlc $< -o $@
+	erlc $(ERLC_FLAGS) $< -o $@
 
 clean:
 	@rm -f *~ *.beam
