@@ -12,9 +12,6 @@
 %% wx_object API
 -export([new/2]).
 
-%% module API
--export([gl/0]). %%, set_title/0]).
-
 %% wx_object callbacks
 -export([init/1, handle_info/2, handle_event/2, terminate/2]).
 
@@ -78,10 +75,6 @@ create_window(Wx, Size) ->
     {Frame, GL}.
 
 
-handle_info({Pid, Ref, gl}, State) ->
-    Pid ! {Ref, State#state.gl},
-    {noreply, State};
-
 handle_info({'EXIT', _Pid, _Reason}, State) ->
     ?D_F("process ~p died: ~p, exiting", [_Pid, _Reason]),
     {stop, normal, State}.
@@ -112,12 +105,3 @@ handle_event(#wx{id=?ABOUT}, #state{frame=Frame} = State) ->
 terminate(_Reason, #state{gl=GL}) ->
     ?D_TERMINATE(_Reason),
     wxGLCanvas:destroy(GL).
-
-
-gl() ->
-    Ref = make_ref(),
-    ?SERVER ! {self(), Ref, gl},
-    receive
-        {Ref, GL} ->
-	    GL
-    end.
