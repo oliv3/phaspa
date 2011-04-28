@@ -6,3 +6,6 @@ run:
 
 %.beam: %.erl
 	erlc $< -o $@
+
+clean:
+	@rm -f *~ *.beam
