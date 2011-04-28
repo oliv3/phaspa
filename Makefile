@@ -1,7 +1,8 @@
-all: screen.beam
+all: gui.beam win.beam screen.beam wirecube.beam
 
 run:
-	erl -noshell -s screen -s init stop
+	erl -noshell -s gui
+# -s init stop
 
 %.beam: %.erl
 	erlc $< -o $@
