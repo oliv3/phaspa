@@ -25,7 +25,7 @@
 %% GL widget state
 -record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV, frame, gl, mouse}).
 
--define(ZMAX, 5).
+-define(ZMAX, 5.0).
 
 %%   handle_call(Msg, {From, Tag}, State) should return <br/>
 %%    {reply, Reply, State} | {reply, Reply, State, Timeout} |
@@ -157,9 +157,9 @@ set_view({Width, Height}, Rot, FOV) ->
     Ratio = Width / Height,
 
     glu:perspective(FOV, Ratio, 0.1, ?ZMAX),
-    glu:lookAt(0, 0, 3.14,
-	       0, 0, -3.14,
-	       0, 1, 0),
+    glu:lookAt(0.0, 0.0, 3.14,
+	       0.0, 0.0, -3.14,
+	       0.0, 1.0, 0.0),
 
     {RotX, RotY, RotZ} = Rot,
     gl:rotatef(RotX, 1.0, 0.0, 0.0),
