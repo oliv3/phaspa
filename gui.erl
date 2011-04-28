@@ -29,7 +29,7 @@
 
 -define(ZMAX, 5).
 
--record(state,  {ifps, frame, gl, size}).
+-record(state,  {ifps, gl, size}).
 
 %%====================================================================
 %% API
@@ -77,7 +77,7 @@ init(Parent) ->
     %% process_flag(trap_exit, true),
     Size = {640, 480},%%ec:get_env(size),
     Wx = wx:new(),
-    Frame = win:new(Wx, Size),
+    win:new(Wx, Size),
     %%?D_F("*** Frame= ~p", [Frame]),
     GL = win:gl(),
     %%?D_F("*** GL= ~p", [GL]),
@@ -86,7 +86,7 @@ init(Parent) ->
     %% IFPS = trunc(1000 / ec:get_env(fps)),
     proc_lib:init_ack(Parent, {ok, self()}),
     tick(?IFPS),
-    loop(Parent, Debug, #state{ifps=?IFPS, frame=Frame, gl=GL, size=Size}).
+    loop(Parent, Debug, #state{ifps=?IFPS, gl=GL, size=Size}).
 
 
 %%====================================================================
