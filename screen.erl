@@ -23,7 +23,7 @@
 -define(SERVER, ?MODULE).
 
 %% GL widget state
--record(state, {size, frame, gl, mouse}).
+-record(state, {size, rot=?DEFAULT_ROT, frame, gl, mouse}).
 
 -define(ZMAX, 5).
 
@@ -35,10 +35,10 @@
 draw() ->
     wx_object:call(?SERVER, draw).
 
-handle_call(draw, _From, #state{size=Size, gl=GL} = State) ->
+handle_call(draw, _From, #state{size=Size, rot=Rot, gl=GL} = State) ->
     %% ?D_F("======= screen / call~n", []),
     wxGLCanvas:setCurrent(GL),
-    set_view(Size),
+    set_view(Size, Rot),
     wirecube:draw(),
     wxGLCanvas:swapBuffers(GL),
     {reply, ok, State}.
@@ -61,7 +61,7 @@ init([Frame, Size]) ->
     wxFrame:connect(GL, enter_window),
     wxFrame:connect(GL, key_up),
 
-    ?D_REGISTER(?SERVER, self()), %% not needed
+    ?D_REGISTER(?SERVER, self()), %% not needed ?
 
     {GL, #state{size=Size, frame=Frame, gl=GL}}.
 
@@ -69,16 +69,15 @@ init([Frame, Size]) ->
 handle_event(#wx{event=#wxMouse{type=left_down, x=X, y=Y}}, State) ->
     {noreply, State#state{mouse={X, Y}}};
 
-handle_event(#wx{event=#wxMouse{type=motion, leftDown=true, x=X, y=Y}}, State) ->
+handle_event(#wx{event=#wxMouse{type=motion, leftDown=true, x=X, y=Y}}, #state{rot=Rot} = State) ->
     {OldX, OldY} = State#state.mouse,
     DX = X - OldX,
     DY = Y - OldY,
-    %% FIXME
-    {RX, RY, RZ} = ?DEFAULT_ROT,
+    {RX, RY, RZ} = Rot,
     NRX = trunc(RX+DY+360) rem 360,
     NRY = trunc(RY+DX+360) rem 360,
-    %% FIXME ec_cf:rot({NRX, NRY, RZ}),
-    {noreply, State#state{mouse={X, Y}}};
+    NewRot = {NRX, NRY, RZ},
+    {noreply, State#state{rot=NewRot, mouse={X, Y}}};
 
 handle_event(#wx{event=#wxMouse{type=motion}}, State) ->
     {noreply, State};
@@ -143,7 +142,7 @@ terminate(_Reason, _State) ->
     ?D_TERMINATE(_Reason).
 
 
-set_view({Width, Height}) ->
+set_view({Width, Height}, Rot) ->
     gl:shadeModel(?GL_SMOOTH),
     gl:depthFunc(?GL_LEQUAL),
     gl:enable(?GL_DEPTH_TEST),
@@ -162,8 +161,7 @@ set_view({Width, Height}) ->
 	       0, 0, -3.14,
 	       0, 1, 0),
 
-    %% FIXME
-    {RotX, RotY, RotZ} = ?DEFAULT_ROT, %%ec_cf:rot(),
+    {RotX, RotY, RotZ} = Rot,
     gl:rotatef(RotX, 1.0, 0.0, 0.0),
     gl:rotatef(RotY, 0.0, 1.0, 0.0),
     gl:rotatef(RotZ, 0.0, 0.0, 1.0),
