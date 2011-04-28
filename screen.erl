@@ -23,7 +23,7 @@
 -define(SERVER, ?MODULE).
 
 %% GL widget state
--record(state, {size, rot=?DEFAULT_ROT, frame, gl, mouse}).
+-record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV, frame, gl, mouse}).
 
 -define(ZMAX, 5).
 
@@ -35,10 +35,10 @@
 draw() ->
     wx_object:call(?SERVER, draw).
 
-handle_call(draw, _From, #state{size=Size, rot=Rot, gl=GL} = State) ->
+handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV, gl=GL} = State) ->
     %% ?D_F("======= screen / call~n", []),
     wxGLCanvas:setCurrent(GL),
-    set_view(Size, Rot),
+    set_view(Size, Rot, FOV),
     wirecube:draw(),
     wxGLCanvas:swapBuffers(GL),
     {reply, ok, State}.
@@ -82,13 +82,13 @@ handle_event(#wx{event=#wxMouse{type=motion, leftDown=true, x=X, y=Y}}, #state{r
 handle_event(#wx{event=#wxMouse{type=motion}}, State) ->
     {noreply, State};
 
-handle_event(#wx{event=#wxMouse{type=mousewheel, wheelRotation=R}}, State) when R < 0 ->
-    %% FIXME ec_cf:inc_fov(),
-    {noreply, State};
+handle_event(#wx{event=#wxMouse{type=mousewheel, wheelRotation=R}}, #state{fov=FOV} = State) when R < 0 ->
+    NewFOV = FOV+1,
+    {noreply, State#state{fov=NewFOV}};
 
-handle_event(#wx{event=#wxMouse{type=mousewheel}}, State) ->
-    %% FIXME ec_cf:dec_fov(),
-    {noreply, State};
+handle_event(#wx{event=#wxMouse{type=mousewheel}}, #state{fov=FOV} = State) ->
+    NewFOV = FOV-1,
+    {noreply, State#state{fov=NewFOV}};
 
 handle_event(#wx{event=#wxMouse{type=enter_window}}, State) ->
     wxFrame:setFocus(State#state.gl),
@@ -142,7 +142,8 @@ terminate(_Reason, _State) ->
     ?D_TERMINATE(_Reason).
 
 
-set_view({Width, Height}, Rot) ->
+%% TODO aspect ratio dans le state
+set_view({Width, Height}, Rot, FOV) ->
     gl:shadeModel(?GL_SMOOTH),
     gl:depthFunc(?GL_LEQUAL),
     gl:enable(?GL_DEPTH_TEST),
@@ -155,8 +156,7 @@ set_view({Width, Height}, Rot) ->
 
     Ratio = Width / Height,
 
-    %% FIXME TODO: dans la conf du screen
-    glu:perspective(?DEFAULT_FOV, Ratio, 0.1, ?ZMAX),
+    glu:perspective(FOV, Ratio, 0.1, ?ZMAX),
     glu:lookAt(0, 0, 3.14,
 	       0, 0, -3.14,
 	       0, 1, 0),
