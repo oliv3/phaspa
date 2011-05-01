@@ -40,6 +40,7 @@ handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV, gl=GL} = State) ->
     wxGLCanvas:setCurrent(GL),
     set_view(Size, Rot, FOV),
     wirecube:draw(),
+    draw_points(),
     wxGLCanvas:swapBuffers(GL),
     {reply, ok, State}.
 
@@ -167,3 +168,21 @@ set_view({Width, Height}, Rot, FOV) ->
     gl:rotatef(RotZ, 0.0, 0.0, 1.0),
 
     gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT).
+
+
+draw_points() ->
+    Points = raw_file:data(),
+    draw_points(Points).
+draw_points([]) ->
+    ok;
+draw_points(Points) ->
+    gl:'begin'(?GL_POINTS),
+    gl:color3ub(255, 255, 255),
+    draw_points2(Points),
+    gl:'end'().
+
+draw_points2([]) ->
+    ok;
+draw_points2([{X,Y,Z}|Points]) ->
+    gl:vertex3f(X, Y, Z),
+    draw_points2(Points).
