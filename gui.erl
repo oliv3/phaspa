@@ -30,6 +30,7 @@
 %%====================================================================
 start() ->
     raw_file:start_link(),
+    raw_file:test(),
     start_link().
 
 start_link() ->

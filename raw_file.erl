@@ -8,6 +8,8 @@
 %%%-------------------------------------------------------------------
 -module(raw_file).
 
+-include("point3d.hrl").
+
 -behaviour(gen_server).
 
 %% module API
@@ -152,7 +154,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
--define(MINSIZE, 3).
+-define(MINSIZE, 6).
 
 %% Assume 8-bit unsigned file
 process_file(Bin) when size(Bin) < ?MINSIZE ->
@@ -160,15 +162,15 @@ process_file(Bin) when size(Bin) < ?MINSIZE ->
 process_file(Bin) ->
     process_file2(binary_to_list(Bin), []).
 
-process_file2([_,_], Acc) ->
-    %% lists:reverse(Acc)
-    Acc; %% osef c'est une liste de point3d
-process_file2([X,Y,Z|Tail], Acc) ->
+process_file2([X,Y,Z,R,G,B|Tail], Acc) ->
     X2 = rescale(X),
     Y2 = rescale(Y),
     Z2 = rescale(Z),
-    Point = {X2, Y2, Z2},
-    process_file2([Y,Z|Tail], [Point|Acc]).
+    Point = #point3d{x=X2, y=Y2, z=Z2, r=R, g=G, b=B},
+    process_file2([Y,Z,R,G,B|Tail], [Point|Acc]);
+process_file2(_Rest, Acc) ->
+    Acc.
+
 
 rescale(V) ->
     (V/255)-0.5.

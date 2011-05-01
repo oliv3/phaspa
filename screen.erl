@@ -8,6 +8,7 @@
 
 -include("gui.hrl").
 -include("debug.hrl").
+-include("point3d.hrl").
 
 -behaviour(wx_object).
 
@@ -176,13 +177,14 @@ draw_points() ->
 draw_points([]) ->
     ok;
 draw_points(Points) ->
+    gl:pointSize(3.0),
     gl:'begin'(?GL_POINTS),
-    gl:color3ub(255, 255, 255),
     draw_points2(Points),
     gl:'end'().
 
 draw_points2([]) ->
     ok;
-draw_points2([{X,Y,Z}|Points]) ->
+draw_points2([#point3d{x=X, y=Y, z=Z, r=R, g=G, b=B}|Points]) ->
+    gl:color3ub(R, G, B),
     gl:vertex3f(X, Y, Z),
     draw_points2(Points).
