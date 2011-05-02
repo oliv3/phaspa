@@ -25,20 +25,23 @@
 
 %% GL widget state
 -record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV, frame, gl, mouse,
+		%% scaling
+		scale=1.0,
 		%% display-list stuff
 		last, list}).
 
 -define(ZMAX, 5.0).
-
+-define(SCALE_STEP, 0.2).
 
 draw() ->
     wx_object:call(?SERVER, draw).
 
-handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV, gl=GL} = State) ->
+handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV, gl=GL, scale=Scale} = State) ->
     %% ?D_F("======= screen / call~n", []),
     wxGLCanvas:setCurrent(GL),
     set_view(Size, Rot, FOV),
     wirecube:draw(),
+    gl:scalef(Scale, Scale, Scale),
     NewState = draw_list(State),
     wxGLCanvas:swapBuffers(GL),
     {reply, ok, NewState}.
@@ -101,6 +104,14 @@ handle_event(#wx{event=#wxMouse{type=enter_window}}, State) ->
 %%     wxTopLevelWindow:showFullScreen(Frame, New),
 %%     {noreply, State};
 
+%% +/-: Change shape scale
+%% +
+handle_event(#wx{event=#wxKey{keyCode=61}}, #state{scale=Scale} = State) ->
+    {noreply, State#state{scale=Scale+?SCALE_STEP}};
+%% -
+handle_event(#wx{event=#wxKey{keyCode=45}}, #state{scale=Scale} = State) ->
+    {noreply, State#state{scale=Scale-?SCALE_STEP}};
+
 %% handle_event(#wx{event=#wxKey{keyCode=$P}}, State) ->
 %%     ec_cf:toggle(?O_PLANE),
 %%     {noreply, State};
@@ -134,7 +145,8 @@ handle_event(#wx{event=#wxMouse{type=enter_window}}, State) ->
 %%     ec_cf:toggle(?O_OSD),
 %%     {noreply, State};
 
-handle_event(#wx{event=#wxKey{}}, State) ->
+handle_event(#wx{event=#wxKey{keyCode=_KC}}, State) ->
+    %% ?D_F("Unhandled key: ~p~n", [_KC]),
     {noreply, State}.
 
 
