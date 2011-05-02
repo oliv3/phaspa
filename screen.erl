@@ -117,11 +117,11 @@ handle_event(#wx{event=#wxKey{keyCode=45}}, #state{scale=Scale} = State) ->
 handle_event(#wx{event=#wxKey{keyCode=$M}}, #state{mode=Mode} = State) ->
     NewMode = case Mode of
 		  ?GL_POINTS ->
-		      ?GL_LINES;
-		  ?GL_LINES ->
+		      ?GL_LINE_STRIP;
+		  ?GL_LINE_STRIP ->
 		      ?GL_POINTS
 	      end,
-    {noreply, State#state{mode=NewMode}};
+    {noreply, State#state{last=make_ref(), mode=NewMode}};
 
 %% handle_event(#wx{event=#wxKey{keyCode=$A}}, State) ->
 %%     ec_cf:toggle(?O_AXES),
