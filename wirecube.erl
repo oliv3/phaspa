@@ -34,7 +34,7 @@ draw() ->
     set_model_view(),
     gl:lineWidth(1.0),
     gl:'begin'(?GL_LINES),
-    gl:color3f(?ZERO, ?ONE, ?ZERO),
+    gl:color3f(?ZERO, ?ONE/2, ?ZERO),
     ?E(1), ?E(2), ?E(2), ?E(3), ?E(3), ?E(4),
     ?E(4), ?E(5), ?E(5), ?E(8), ?E(8), ?E(3),
     ?E(1), ?E(6), ?E(6), ?E(7), ?E(7), ?E(2),
