@@ -24,14 +24,12 @@
 -define(SERVER, ?MODULE).
 
 %% GL widget state
--record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV, frame, gl, mouse}).
+-record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV, frame, gl, mouse,
+		%% display-list stuff
+		last, list}).
 
 -define(ZMAX, 5.0).
 
-%%   handle_call(Msg, {From, Tag}, State) should return <br/>
-%%    {reply, Reply, State} | {reply, Reply, State, Timeout} |
-%%        {noreply, State} | {noreply, State, Timeout} |
-%%        {stop, Reason, Reply, State}  
 
 draw() ->
     wx_object:call(?SERVER, draw).
@@ -41,9 +39,9 @@ handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV, gl=GL} = State) ->
     wxGLCanvas:setCurrent(GL),
     set_view(Size, Rot, FOV),
     wirecube:draw(),
-    draw_points(),
+    NewState = draw_list(State),
     wxGLCanvas:swapBuffers(GL),
-    {reply, ok, State}.
+    {reply, ok, NewState}.
 
 new(Frame, Size) ->
     wx_object:start_link(?MODULE, [Frame, Size], []).
@@ -171,20 +169,36 @@ set_view({Width, Height}, Rot, FOV) ->
     gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT).
 
 
-draw_points() ->
-    Points = raw_file:data(),
-    draw_points(Points).
-draw_points([]) ->
-    ok;
-draw_points(Points) ->
+draw_list(#state{last=Last, list=List} = State) ->
+    case raw_file:data(Last) of
+	Last ->
+	    gl:callList(List),
+	    State;
+	{New, Points} ->
+	    NewList = make_list(List, Points),
+	    State#state{last=New, list=NewList}
+    end.
+
+
+make_list(undefined, Points) ->
+    make_list2(Points);
+make_list(OldList, Points) ->
+    gl:deleteLists(OldList, 1),
+    make_list2(Points).
+
+make_list2(Points) ->
+    NewList = gl:genLists(1),
+    gl:newList(NewList, ?GL_COMPILE_AND_EXECUTE),
     gl:pointSize(3.0),
     gl:'begin'(?GL_POINTS),
-    draw_points2(Points),
-    gl:'end'().
+    add_points(Points),
+    gl:'end'(),
+    gl:endList(),
+    NewList.
 
-draw_points2([]) ->
+add_points([]) ->
     ok;
-draw_points2([#point3d{x=X, y=Y, z=Z, r=R, g=G, b=B}|Points]) ->
+add_points([#point3d{x=X, y=Y, z=Z, r=R, g=G, b=B}|Points]) ->
     gl:color3ub(R, G, B),
     gl:vertex3f(X, Y, Z),
-    draw_points2(Points).
+    add_points(Points).

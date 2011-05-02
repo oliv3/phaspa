@@ -13,7 +13,7 @@
 -behaviour(gen_server).
 
 %% module API
--export([load/1, data/0]).
+-export([load/1, data/1]).
 
 %% tests
 -define(TEST, "raw/irish11b.raw").
@@ -28,7 +28,7 @@
 
 -define(SERVER, ?MODULE). 
 
--record(state, {data=[]}).
+-record(state, {last, data=[]}).
 
 %%%===================================================================
 %%% API
@@ -36,8 +36,8 @@
 load(File) ->
     gen_server:call(?SERVER, {load, File}).
 
-data() ->
-    gen_server:call(?SERVER, data).
+data(Last) ->
+    gen_server:call(?SERVER, {data, Last}).
 
 test() ->
     load(?TEST).
@@ -91,10 +91,13 @@ handle_call({load, File}, _From, #state{data=Data} = State) ->
 			   {error, _Reason} = Error ->
 			       {Error, Data}
 		       end,
-    {reply, Reply, State#state{data=NewData}};
+    {reply, Reply, State#state{last=make_ref(), data=NewData}};
 
-handle_call(data, _From, #state{data=Data} = State) ->
-    {reply, Data, State};
+handle_call({data, Last}, _From, #state{last=Last} = State) ->
+    {reply, Last, State};
+
+handle_call({data, _Last}, _From, #state{last=New, data=Data} = State) ->
+    {reply, {New, Data}, State};
 
 handle_call(_Request, _From, State) ->
     Reply = ok,
