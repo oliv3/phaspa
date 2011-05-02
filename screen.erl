@@ -27,6 +27,8 @@
 -record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV, frame, gl, mouse,
 		%% scaling
 		scale=1.0,
+		%% drawing mode
+		mode=?GL_POINTS,
 		%% display-list stuff
 		last, list}).
 
@@ -112,9 +114,14 @@ handle_event(#wx{event=#wxKey{keyCode=61}}, #state{scale=Scale} = State) ->
 handle_event(#wx{event=#wxKey{keyCode=45}}, #state{scale=Scale} = State) ->
     {noreply, State#state{scale=Scale-?SCALE_STEP}};
 
-%% handle_event(#wx{event=#wxKey{keyCode=$P}}, State) ->
-%%     ec_cf:toggle(?O_PLANE),
-%%     {noreply, State};
+handle_event(#wx{event=#wxKey{keyCode=$M}}, #state{mode=Mode} = State) ->
+    NewMode = case Mode of
+		  ?GL_POINTS ->
+		      ?GL_LINES;
+		  ?GL_LINES ->
+		      ?GL_POINTS
+	      end,
+    {noreply, State#state{mode=NewMode}};
 
 %% handle_event(#wx{event=#wxKey{keyCode=$A}}, State) ->
 %%     ec_cf:toggle(?O_AXES),
@@ -181,28 +188,28 @@ set_view({Width, Height}, Rot, FOV) ->
     gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT).
 
 
-draw_list(#state{last=Last, list=List} = State) ->
+draw_list(#state{last=Last, list=List, mode=Mode} = State) ->
     case raw_file:data(Last) of
 	Last ->
 	    gl:callList(List),
 	    State;
 	{New, Points} ->
-	    NewList = make_list(List, Points),
+	    NewList = make_list(Mode, List, Points),
 	    State#state{last=New, list=NewList}
     end.
 
 
-make_list(undefined, Points) ->
-    make_list2(Points);
-make_list(OldList, Points) ->
+make_list(Mode, undefined, Points) ->
+    make_list2(Mode, Points);
+make_list(Mode, OldList, Points) ->
     gl:deleteLists(OldList, 1),
-    make_list2(Points).
+    make_list2(Mode, Points).
 
-make_list2(Points) ->
+make_list2(Mode, Points) ->
     NewList = gl:genLists(1),
     gl:newList(NewList, ?GL_COMPILE_AND_EXECUTE),
     gl:pointSize(3.0),
-    gl:'begin'(?GL_POINTS),
+    gl:'begin'(Mode),
     add_points(Points),
     gl:'end'(),
     gl:endList(),
