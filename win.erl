@@ -10,7 +10,7 @@
 -include("debug.hrl").
 
 %% wx_object API
--export([new/2]).
+-export([new/1]).
 
 %% wx_object callbacks
 -export([init/1, handle_info/2, handle_event/2, terminate/2]).
@@ -26,7 +26,8 @@
 -define(SERVER, ?MODULE).
 
 
-new(Wx, Size) ->
+new(Wx) ->
+    Size = {640, 480},
     wx_object:start_link(?MODULE, [Wx, Size], []).
 
 

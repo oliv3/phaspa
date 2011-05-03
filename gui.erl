@@ -23,7 +23,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state,  {ifps, size}).
+-record(state,  {ifps}).
 
 %%====================================================================
 %% API
@@ -42,15 +42,14 @@ start_link() ->
 %%====================================================================
 init(Parent) ->
     %% process_flag(trap_exit, true),
-    Size = {640, 480},%%ec:get_env(size),
     Wx = wx:new(),
-    win:new(Wx, Size),
+    win:new(Wx),
     ?D_REGISTER(?SERVER, self()),
     Debug = sys:debug_options([]),
     %% IFPS = trunc(1000 / ec:get_env(fps)),
     proc_lib:init_ack(Parent, {ok, self()}),
     tick(?IFPS),
-    loop(Parent, Debug, #state{ifps=?IFPS, size=Size}).
+    loop(Parent, Debug, #state{ifps=?IFPS}).
 
 
 %%====================================================================
