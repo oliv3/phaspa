@@ -6,7 +6,6 @@
 -module(gui).
 -author('olivier@biniou.info').
 
-%% -include("ec.hrl").
 -include("debug.hrl").
 -include("gui.hrl").
 
