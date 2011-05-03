@@ -14,7 +14,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state,  {ifps=?IFPS}).
+-record(state,  {}).
 
 %%====================================================================
 %% API
@@ -36,11 +36,11 @@ init() ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
-loop(#state{ifps=IFPS} = State) ->
+loop(State) ->
     receive
 	draw ->
 	    draw(),
-	    tick(IFPS),
+	    tick(?IFPS),
 	    loop(State);
 
 	{'EXIT', Pid, Reason} ->
