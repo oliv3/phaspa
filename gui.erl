@@ -22,6 +22,7 @@ start() ->
     raw_file:test(),
     Wx = wx:new(),
     win:new(Wx),
+    ?D_REGISTER(?SERVER, self()),
     tick(?IFPS),
     loop(),
     wx:destroy().
