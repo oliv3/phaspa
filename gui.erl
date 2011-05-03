@@ -18,10 +18,10 @@
 %%====================================================================
 start() ->
     process_flag(trap_exit, true),
-    raw_file:start_link(),
-    raw_file:test(),
     Wx = wx:new(),
     win:new(Wx),
+    raw_file:new(Wx),
+    raw_file:test(),
     ?D_REGISTER(?SERVER, self()),
     tick(?IFPS),
     loop(),

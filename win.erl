@@ -28,7 +28,7 @@
 
 new(Wx) ->
     Size = {640, 480},
-    wx_object:start_link(?MODULE, [Wx, Size], []).
+    wx_object:start_link(?SERVER, [Wx, Size], []).
 
 
 init([Wx, Size]) ->
