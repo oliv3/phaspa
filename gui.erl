@@ -14,23 +14,20 @@
 
 -define(SERVER, ?MODULE).
 
--record(state,  {}).
+-record(state, {}).
 
 %%====================================================================
 %% API
 %%====================================================================
 start() ->
+    process_flag(trap_exit, true),
     raw_file:start_link(),
     raw_file:test(),
-    init(),
-    tick(?IFPS),
-    loop(#state{}).
-
-init() ->
-    %% process_flag(trap_exit, true),
     Wx = wx:new(),
     win:new(Wx),
-    ?D_REGISTER(?SERVER, self()).
+    tick(?IFPS),
+    loop(#state{}),
+    wx:destroy().
 
 
 %%====================================================================
@@ -45,17 +42,6 @@ loop(State) ->
 
 	{'EXIT', Pid, Reason} ->
 	    ?D_F("got EXIT from ~p with reason: ~p", [Pid, Reason]);
-	    %% ?D_F("got EXIT from ~p with reason: ~p", [Pid, Reason]),
-            %% case unregister(Pid, State) of
-	    %% 	{ok, NewState} ->
-	    %% 	    loop(Parent, Debug, NewState);
-
-	    %% 	{false, State} ->
-            %%         wxFrame:destroy(State#state.frame),
-            %%         wx:destroy(),
-            %%         ?D_F("wxWidgets destroyed", []),
-            %%         exit(Reason)
-            %% end;
 
 	_Other ->
 	    ?D_UNHANDLED(_Other),
