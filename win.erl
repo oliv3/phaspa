@@ -10,10 +10,7 @@
 -include("debug.hrl").
 
 %% wx_object API
--export([new/2]).
-
-%% module API
--export([gl/0]). %%, set_title/0]).
+-export([new/1]).
 
 %% wx_object callbacks
 -export([init/1, handle_info/2, handle_event/2, terminate/2]).
@@ -29,14 +26,16 @@
 -define(SERVER, ?MODULE).
 
 
-new(Wx, Size) ->
-    wx_object:start_link(?MODULE, [Wx, Size], []).
+new(Wx) ->
+    wx_object:start_link(?MODULE, [Wx], []).
 
 
-init([Wx, Size]) ->
+init([Wx]) ->
     process_flag(trap_exit, true),
+    Size = {640, 480},
     {Frame, GL} = wx:batch(fun() -> create_window(Wx, Size) end),
     ?D_REGISTER(?SERVER, self()),
+    tick(?IFPS),
     {Frame, #state{frame=Frame, gl=GL}}.
 
 
@@ -78,8 +77,9 @@ create_window(Wx, Size) ->
     {Frame, GL}.
 
 
-handle_info({Pid, Ref, gl}, State) ->
-    Pid ! {Ref, State#state.gl},
+handle_info(draw, State) ->
+    draw(),
+    tick(?IFPS),
     {noreply, State};
 
 handle_info({'EXIT', _Pid, _Reason}, State) ->
@@ -114,10 +114,9 @@ terminate(_Reason, #state{gl=GL}) ->
     wxGLCanvas:destroy(GL).
 
 
-gl() ->
-    Ref = make_ref(),
-    ?SERVER ! {self(), Ref, gl},
-    receive
-        {Ref, GL} ->
-	    GL
-    end.
+draw() ->
+    screen:draw().
+
+
+tick(T) ->
+    erlang:send_after(T, ?SERVER, draw).

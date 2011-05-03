@@ -12,6 +12,8 @@
 
 -export([start/0]).
 
+%% FIXME *NOT* a wx_object !!!
+
 %% wx_object API
 -export([start_link/0]).
 
@@ -23,7 +25,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state,  {ifps, gl, size}).
+-record(state,  {}).
 
 %%====================================================================
 %% API
@@ -42,18 +44,14 @@ start_link() ->
 %%====================================================================
 init(Parent) ->
     %% process_flag(trap_exit, true),
-    Size = {640, 480},%%ec:get_env(size),
     Wx = wx:new(),
-    win:new(Wx, Size),
+    win:new(Wx),
     %%?D_F("*** Frame= ~p", [Frame]),
-    GL = win:gl(),
-    %%?D_F("*** GL= ~p", [GL]),
     ?D_REGISTER(?SERVER, self()),
     Debug = sys:debug_options([]),
     %% IFPS = trunc(1000 / ec:get_env(fps)),
     proc_lib:init_ack(Parent, {ok, self()}),
-    tick(?IFPS),
-    loop(Parent, Debug, #state{ifps=?IFPS, gl=GL, size=Size}).
+    loop(Parent, Debug, #state{}).
 
 
 %%====================================================================
@@ -70,13 +68,8 @@ init(Parent) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
-loop(Parent, Debug, #state{ifps=IFPS} = State) ->
+loop(Parent, Debug, State) ->
     receive
-	draw ->
-	    draw(),
-	    tick(IFPS),
-	    loop(Parent, Debug, State);
-
 	{'EXIT', Pid, Reason} ->
 	    ?D_F("got EXIT from ~p with reason: ~p", [Pid, Reason]);
 	    %% ?D_F("got EXIT from ~p with reason: ~p", [Pid, Reason]),
@@ -99,11 +92,3 @@ loop(Parent, Debug, #state{ifps=IFPS} = State) ->
 	    ?D_UNHANDLED(_Other),
 	    loop(Parent, Debug, State)
     end.
-
-
-draw() ->
-    screen:draw().
-
-
-tick(T) ->
-    erlang:send_after(T, ?SERVER, draw).
