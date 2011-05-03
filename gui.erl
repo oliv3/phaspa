@@ -14,8 +14,6 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {}).
-
 %%====================================================================
 %% API
 %%====================================================================
@@ -26,26 +24,26 @@ start() ->
     Wx = wx:new(),
     win:new(Wx),
     tick(?IFPS),
-    loop(#state{}),
+    loop(),
     wx:destroy().
 
 
 %%====================================================================
 %% Internal functions
 %%====================================================================
-loop(State) ->
+loop() ->
     receive
 	draw ->
 	    draw(),
 	    tick(?IFPS),
-	    loop(State);
+	    loop();
 
 	{'EXIT', Pid, Reason} ->
 	    ?D_F("got EXIT from ~p with reason: ~p", [Pid, Reason]);
 
 	_Other ->
 	    ?D_UNHANDLED(_Other),
-	    loop(State)
+	    loop()
     end.
 
 
