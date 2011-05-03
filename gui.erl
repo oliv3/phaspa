@@ -12,18 +12,9 @@
 
 -export([start/0]).
 
-%% wx_object API
--export([start_link/0]).
-
-%% wx_object callbacks
--export([init/1]).
-
-%% proc_lib callbacks
-%%-export([system_code_change/4, system_continue/3]).
-
 -define(SERVER, ?MODULE).
 
--record(state,  {ifps}).
+-record(state,  {ifps=?IFPS}).
 
 %%====================================================================
 %% API
@@ -31,47 +22,26 @@
 start() ->
     raw_file:start_link(),
     raw_file:test(),
-    start_link().
+    init(),
+    tick(?IFPS),
+    loop(#state{}).
 
-start_link() ->
-    proc_lib:start_link(?MODULE, init, [self()]).
-
-
-%%====================================================================
-%% wx_object Callbacks
-%%====================================================================
-init(Parent) ->
+init() ->
     %% process_flag(trap_exit, true),
     Wx = wx:new(),
     win:new(Wx),
-    ?D_REGISTER(?SERVER, self()),
-    Debug = sys:debug_options([]),
-    %% IFPS = trunc(1000 / ec:get_env(fps)),
-    proc_lib:init_ack(Parent, {ok, self()}),
-    tick(?IFPS),
-    loop(Parent, Debug, #state{ifps=?IFPS}).
-
-
-%%====================================================================
-%% proc_lib callbacks
-%%====================================================================
-%% system_code_change(State, _Module, _OldVsn, _Extra) ->
-%%     {ok, State}.
-
-%% system_continue(Parent, Debug, State) ->
-%%     %% ?D_F("system_continue(~p, ~p, ~p)", [Parent, Debug, State]),
-%%     loop(Parent, Debug, State).
+    ?D_REGISTER(?SERVER, self()).
 
 
 %%====================================================================
 %% Internal functions
 %%====================================================================
-loop(Parent, Debug, #state{ifps=IFPS} = State) ->
+loop(#state{ifps=IFPS} = State) ->
     receive
 	draw ->
 	    draw(),
 	    tick(IFPS),
-	    loop(Parent, Debug, State);
+	    loop(State);
 
 	{'EXIT', Pid, Reason} ->
 	    ?D_F("got EXIT from ~p with reason: ~p", [Pid, Reason]);
@@ -87,13 +57,9 @@ loop(Parent, Debug, #state{ifps=IFPS} = State) ->
             %%         exit(Reason)
             %% end;
 
-        {system, From, Request} ->
-	    ?D_F("system message: From ~p Request: ~p", [From, Request]),
-            sys:handle_system_msg(Request, From, Parent, ?MODULE, Debug, State);
-	
 	_Other ->
 	    ?D_UNHANDLED(_Other),
-	    loop(Parent, Debug, State)
+	    loop(State)
     end.
 
 
