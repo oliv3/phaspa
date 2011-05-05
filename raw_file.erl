@@ -205,41 +205,10 @@ create_window(Wx, Size) ->
 			 {size, Size},
 			 {style, ?wxFRAME_NO_WINDOW_MENU}]),
 
-    {ok, Cwd} = file:get_cwd(),
-    FP = wxFilePickerCtrl:new(Frame, 1, [{path, Cwd++"/raw/"}, {message, "Select a raw file"}]),
-
-    wxFilePickerCtrl:setPath(FP, "/tmp"),
-    wxFilePickerCtrl:connect(FP, command_filepicker_changed),%%, []), %% [] == ?
-
-    %% Icon = wxIcon:new(ec:priv_path("wxwin.ico")),
-    %% wxFrame:setIcon(Frame, Icon),
-
-    %% wxFrame:setBackgroundColour(Frame, {0, 0, 0}),
-    %% wxFrame:connect(Frame, close_window),
-
-    %% MenuBar = wxMenuBar:new(),
-    %% File    = wxMenu:new([]),
-    %% Help    = wxMenu:new([]),
-
-    %% wxMenu:append(File, ?QUIT, "&Quit"),
-    %% wxMenu:append(Help, ?ABOUT, "&About"),
-
-    %% wxMenuBar:append(MenuBar, File, "&File"),
-    %% wxMenuBar:append(MenuBar, Help, "&Help"),
-
-    %% wxFrame:setMenuBar(Frame, MenuBar),
-    %% wxFrame:connect(Frame, command_menu_selected),
-
-    %% GL = screen:new(Frame, Size),
-
-    %% Sizer = wxBoxSizer:new(?wxVERTICAL),
-    %% wxSizer:addStretchSpacer(Sizer),
-    %% wxSizer:add(Sizer, GL, [{flag, ?wxALIGN_CENTER}]),
-    %% wxSizer:addStretchSpacer(Sizer),
-    %% wxFrame:setSizer(Frame, Sizer),
+    FP = wxFilePickerCtrl:new(Frame, 1, [{path, "./raw/"}, {message, "Select a raw file"}]),
+    wxFilePickerCtrl:connect(FP, command_filepicker_changed),
 
     wxFrame:show(Frame),
-
     Frame.
 
 
