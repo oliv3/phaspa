@@ -28,7 +28,7 @@
 
 %% wx_object callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-	 terminate/2]). %% , code_change/3]).
+	 handle_event/2, terminate/2, code_change/3]).
 
 -define(SERVER, ?MODULE). 
 
@@ -58,7 +58,7 @@ test() ->
 %% @end
 %%--------------------------------------------------------------------
 new(Wx) ->
-    wx_object:start_link(?SERVER, [Wx], []).
+    wx_object:start_link(?MODULE, Wx, []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -75,9 +75,9 @@ new(Wx) ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([Wx]) ->
-    process_flag(trap_exit, true),
-    Size = {100, 100},
+init(Wx) ->
+    %% process_flag(trap_exit, true),
+    Size = {200, 30},
     Frame = wx:batch(fun() -> create_window(Wx, Size) end),
     ?D_REGISTER(?SERVER, self()),
     {Frame, #state{frame=Frame}}.
@@ -97,14 +97,9 @@ init([Wx]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_call({load, File}, _From, #state{data=Data} = State) ->
-    {Reply, NewData} = case file:read_file(File) of
-			   {ok, Bin} ->
-			       {ok, process_file(Bin)};
-			   {error, _Reason} = Error ->
-			       {Error, Data}
-		       end,
-    {reply, Reply, State#state{last=make_ref(), data=NewData}};
+handle_call({load, File}, _From, #state{last=Last, data=Data} = State) ->
+    {Reply, NewLast, NewData} = load_file(Last, File, Data),
+    {reply, Reply, State#state{last=NewLast, data=NewData}};
 
 handle_call({data, Last}, _From, #state{last=Last} = State) ->
     {reply, Last, State};
@@ -129,6 +124,15 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
+%% handle_event
+handle_event(#wx{event = #wxFileDirPicker{type = command_filepicker_changed,
+                                          path = Path}}, #state{last=Last, data=Data} = State) ->
+    %% io:format("Filepicker changed to ~p.\n", [Path]),
+    %% load(Path),
+    {_Reply, NewLast, NewData} = load_file(Last, Path, Data),
+    {noreply, State#state{last=NewLast, data=NewData}}.
+
+
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
@@ -139,8 +143,12 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_info(_Info, State) ->
+handle_info(Info, State) ->
+    ?D_F("Unhandled info: ~p~n", [Info]),
     {noreply, State}.
+
+%% handle_info(_Info, State) ->
+%%     {noreply, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -164,8 +172,8 @@ terminate(_Reason, _State) ->
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %% @end
 %%--------------------------------------------------------------------
-%% code_change(_OldVsn, State, _Extra) ->
-%%     {ok, State}.
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.
 
 %%%===================================================================
 %%% Internal functions
@@ -197,6 +205,12 @@ create_window(Wx, Size) ->
 			 {size, Size},
 			 {style, ?wxFRAME_NO_WINDOW_MENU}]),
 
+    {ok, Cwd} = file:get_cwd(),
+    FP = wxFilePickerCtrl:new(Frame, 1, [{path, Cwd++"/raw/"}, {message, "Select a raw file"}]),
+
+    wxFilePickerCtrl:setPath(FP, "/tmp"),
+    wxFilePickerCtrl:connect(FP, command_filepicker_changed),%%, []), %% [] == ?
+
     %% Icon = wxIcon:new(ec:priv_path("wxwin.ico")),
     %% wxFrame:setIcon(Frame, Icon),
 
@@ -227,3 +241,13 @@ create_window(Wx, Size) ->
     wxFrame:show(Frame),
 
     Frame.
+
+
+%% {Reply, NewLast, NewData}
+load_file(Last, File, Data) ->
+    case file:read_file(File) of
+	{ok, Bin} ->
+	    {ok, make_ref(), process_file(Bin)};
+	{error, _Reason} = Error ->
+	    {Error, Last, Data}
+    end.
