@@ -32,7 +32,7 @@
 		%% drawing mode
 		mode=?GL_POINTS,
 		%% display-list stuff
-		last, list}).
+		last, list=0}).
 
 -define(ZMAX, 5.0).
 -define(SCALE_STEP, 0.2).
@@ -201,8 +201,6 @@ draw_list(#state{last=Last, list=List, mode=Mode} = State) ->
     end.
 
 
-make_list(Mode, undefined, Points) ->
-    make_list2(Mode, Points);
 make_list(Mode, OldList, Points) ->
     gl:deleteLists(OldList, 1),
     make_list2(Mode, Points).

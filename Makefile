@@ -1,5 +1,6 @@
 all: gui.beam win.beam screen.beam wirecube.beam raw_file.beam \
 	rec
+# rec.beam
 
 run:
 	erl -noshell -s gui
