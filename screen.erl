@@ -23,10 +23,12 @@
 
 -define(SERVER, ?MODULE).
 
+%% -define(OLD, true).
+
 %% GL widget state
 -record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV, frame, gl, mouse,
 		%% scaling
-		scale=1.0,
+		scale=2.0, %% 1.0,
 		%% drawing mode
 		mode=?GL_POINTS,
 		%% display-list stuff
@@ -56,7 +58,7 @@ init([Frame, Size]) ->
     Opts = [{size, Size}],
     GLAttrib = [{attribList, [?WX_GL_RGBA,
 			      ?WX_GL_DOUBLEBUFFER,
-			      ?WX_GL_DEPTH_SIZE, 16,
+			      ?WX_GL_DEPTH_SIZE, 24,
 			      0]}],
     GL = wxGLCanvas:new(Frame, Opts ++ GLAttrib),
 
@@ -167,7 +169,7 @@ set_view({Width, Height}, Rot, FOV) ->
     gl:depthFunc(?GL_LEQUAL),
     gl:enable(?GL_DEPTH_TEST),
     gl:enable(?GL_BLEND),
-    gl:clearColor(0.0, 0.0, 0.0, 1.0),
+    gl:clearColor(10/255, 30/255, 10/255, 1.0),
     gl:clearDepth(?ZMAX),
 
     gl:matrixMode(?GL_PROJECTION),
@@ -205,6 +207,7 @@ make_list(Mode, OldList, Points) ->
     gl:deleteLists(OldList, 1),
     make_list2(Mode, Points).
 
+-ifdef(OLD).
 make_list2(Mode, Points) ->
     NewList = gl:genLists(1),
     gl:newList(NewList, ?GL_COMPILE_AND_EXECUTE),
@@ -214,6 +217,21 @@ make_list2(Mode, Points) ->
     gl:'end'(),
     gl:endList(),
     NewList.
+-else.
+make_list2(Mode, Points) ->
+    NewList = gl:genLists(1),
+    gl:newList(NewList, ?GL_COMPILE_AND_EXECUTE),
+    gl:enable(?GL_POINT_SMOOTH),
+    gl:disable(?GL_BLEND),
+    gl:enable(?GL_ALPHA_TEST),
+    gl:alphaFunc(?GL_GREATER, 0.5),
+    gl:pointSize(3.0),
+    gl:'begin'(Mode),
+    add_points(Points),
+    gl:'end'(),
+    gl:endList(),
+    NewList.
+-endif.
 
 add_points([]) ->
     ok;
