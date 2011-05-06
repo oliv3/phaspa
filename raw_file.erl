@@ -20,7 +20,7 @@
 -export([load/1, data/1]).
 
 %% tests
--define(TEST, "raw/irish11b.raw").
+-define(TEST, "raw/nsamp14.raw").
 -export([test/0]).
 
 %% wx_object API
