@@ -7,6 +7,7 @@
 -author('olivier@biniou.info').
 
 -include("debug.hrl").
+-include("point3d.hrl").
 
 %% Module API
 -export([new/0, destroy/0]).
@@ -17,7 +18,7 @@
 -export([data/0]).
 
 %% Internal exports
--export([boot/0]).
+-export([boot/1]).
 
 -define(SERVER, ?MODULE).
 
@@ -26,13 +27,18 @@
 
 new() ->
     %% process_flag(trap_exit, true),
-    spawn(?MODULE, boot, []).
+    spawn(?MODULE, boot, [self()]),
+    receive
+	started ->
+	    ok
+    end.
 
-boot() ->
+boot(Parent) ->
     %% TODO use code:priv_dir() later
     Cmd = "./rec",
     Port = open_port({spawn_executable, Cmd}, [{packet, 4}, in, out, binary]),
     register(?SERVER, self()),
+    Parent ! started,
     loop(#state{port=Port}).
 
 
@@ -96,7 +102,9 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
 	    loop(State);
 
 	{Port, {data, PortData}} ->
-	    loop(State#state{last=make_ref(), data=binary_to_term(PortData)});
+	    RawData = binary_to_term(PortData),
+	    NewData = process(RawData, []),
+	    loop(State#state{last=make_ref(), data=NewData});
 
 	_Other ->
 	    ?D_UNHANDLED(_Other)
@@ -112,3 +120,10 @@ port_command_wrapper(Port, Pid, Ref, Cmd) ->
 	    ?D_F("Cmd: ~p Result: ~p~n", [Cmd, Result]),
 	    Pid ! {Ref, Result}
     end.
+
+
+process([X,Y,Z|Tail], Acc) ->
+    Point = #point3d{x=X, y=Y, z=Z},
+    process([Y,Z|Tail], [Point|Acc]);
+process(_Rest, Acc) ->
+    Acc.

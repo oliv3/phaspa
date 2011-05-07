@@ -191,7 +191,7 @@ set_view({Width, Height}, Rot, FOV) ->
 
 
 draw_list(#state{last=Last, list=List, mode=Mode} = State) ->
-    case raw_file:data(Last) of
+    case rec:data(Last) of
 	Last ->
 	    gl:callList(List),
 	    State;
