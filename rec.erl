@@ -114,23 +114,12 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
 		    port_close(Port),
 		    Pid ! {Ref, ok};
 		
-		%% TODO: port_command wrapper qui fait le term_to_binary()
-		{Pid, Ref, {record, Freq}} ->
-		    port_command(Port, term_to_binary({record, Freq})),
-		    receive
-			{Port, {data, Res}} ->
-			    %% ?D_F("record(~p) GOT RESULT: ~p~n", [Freq, binary_to_term(Res)]),
-			    Pid ! {Ref, binary_to_term(Res)}
-		    end,
+		{Pid, Ref, {record, _Freq} = Cmd} ->
+		    port_command_wrapper(Port, Pid, Ref, Cmd),
 		    loop(State);
 		
-		{Pid, Ref, stop} ->
-		    port_command(Port, term_to_binary(stop)),
-		    receive
-			{Port, {data, Res}} ->
-			    %% ?D_F("stop: GOT RESULT: ~p~n", [binary_to_term(Res)]),
-			    Pid ! {Ref, binary_to_term(Res)}
-		    end,
+		{Pid, Ref, stop = Cmd} ->
+		    port_command_wrapper(Port, Pid, Ref, Cmd),
 		    loop(State);
 		
 		{Port, {data, PortData}} ->
@@ -143,17 +132,11 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
     end.
 
 
-%% stop_biniou(Port) ->
-%%     port_command(Port, ?STOP_CHAR),
-
-
-%% check_input(A) when is_atom(A) ->
-%%     check_input(atom_to_list(A));
-%% check_input(L) ->
-%%     ?D_F("Check input ~p", [L]),
-%%     case lists:member(L, ?INPUTS) of
-%% 	true ->
-%% 	    L;
-%% 	false ->
-%% 	    exit({error, bad_input})
-%%     end.
+port_command_wrapper(Port, Pid, Ref, Cmd) ->
+    port_command(Port, term_to_binary(Cmd)),
+    receive
+	{Port, {data, BinResult}} ->
+	    Result = binary_to_term(BinResult),
+	    ?D_F("Cmd: ~p Result: ~p~n", [Cmd, Result]),
+	    Pid ! {Ref, Result}
+    end.
