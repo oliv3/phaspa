@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 
 /* TODO: pass it as an option to start */
-#define INSIZE	   64 // 256
+#define INSIZE	   16 // 64 // 256
 #define ABUFF_SIZE INSIZE * 1 /* channels */  * sizeof(float)
 
 
@@ -155,7 +155,7 @@ record(void *args) {
 	/* check(ei_x_encode_double(&result, sp->spoints[i].coords[2])); */
 
 	// TODO rescale: / SHRT_MIN
-	check(ei_x_encode_double(&result, pa_buff[i]));
+	check(ei_x_encode_double(&result, pa_buff[i]/(float)-SHRT_MIN));
       }
       check(ei_x_encode_empty_list(&result));
 
