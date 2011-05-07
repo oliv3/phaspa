@@ -99,7 +99,6 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
 	    loop(State#state{last=make_ref(), data=binary_to_term(PortData)});
 
 	_Other ->
-	    %%stop_biniou(Port),
 	    ?D_UNHANDLED(_Other)
 	    %% end
     end.
