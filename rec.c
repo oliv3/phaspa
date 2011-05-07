@@ -8,12 +8,22 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
-/* TODO: pass it as an option to start */
-#define INSIZE	   16 // 64 // 256
-#define ABUFF_SIZE INSIZE * 1 /* channels */  * sizeof(float)
+// #define NORMAL_DSP
 
+/* TODO: pass INSIZE it as an option to start */
+#define INSIZE	   256
 
-static float pa_buff[INSIZE]; // ABUFF_SIZE];
+#ifdef NORMAL_DSP
+#define CHANNELS   1
+#else
+#define CHANNELS   2
+#endif
+static void fix_buff();
+
+#define ABUFF_SIZE INSIZE * CHANNELS * sizeof(float)
+
+static float pa_buff[INSIZE*CHANNELS];
+static float out_buff[INSIZE];
 static pa_simple *pa_s = NULL;
 static pthread_t recorder;
 static long frequency = -1;
@@ -99,7 +109,7 @@ record(void *args) {
   memset(pa_buff, 0, ABUFF_SIZE);
 
   ss.format = PA_SAMPLE_FLOAT32LE;
-  ss.channels = 1;
+  ss.channels = CHANNELS;
   ss.rate = frequency;
 
   pa_s = pa_simple_new(NULL,               /* PulseAudio server. */
@@ -134,6 +144,7 @@ record(void *args) {
     int error;
 
     n = pa_simple_read(pa_s, (void *)pa_buff, ABUFF_SIZE, &error);
+    fix_buff();
 
     // D("%s", "RECORD ON");
 
@@ -155,7 +166,7 @@ record(void *args) {
 	/* check(ei_x_encode_double(&result, sp->spoints[i].coords[2])); */
 
 	// TODO rescale: / SHRT_MIN
-	check(ei_x_encode_double(&result, pa_buff[i]/(float)-SHRT_MIN));
+	check(ei_x_encode_double(&result, out_buff[i]));
       }
       check(ei_x_encode_empty_list(&result));
 
@@ -321,3 +332,28 @@ write_exact(char *buf, uint32_t len) {
 
   return len;
 }
+
+
+#ifdef NORMAL_DSP
+static void
+fix_buff()
+{
+  int i;
+
+  for (i = 0; i < INSIZE; i++)
+    out_buff[i] = pa_buff[i]/(float)-SHRT_MIN;
+}
+#else
+static void
+fix_buff()
+{
+  int i, j=0;
+
+  for (i = 0; i < INSIZE; i++) {
+    float tmp = pa_buff[i] - pa_buff[i+1];
+    tmp /= 2;
+    out_buff[j++] = tmp;//tmp/(float)-SHRT_MIN;
+    // fprintf(stderr, "%f ", out_buff[i]);
+  }
+}
+#endif
