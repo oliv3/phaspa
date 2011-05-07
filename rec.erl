@@ -88,7 +88,7 @@ data(Last) ->
     do({data, Last}).
 
 
-loop(#state{port=Port, last=Last} = State) ->
+loop(#state{port=Port, last=Last, data=Data} = State) ->
     %% receive
     %% 	{Port, {data, Data}} ->
     %% 	    %% ?D_F("Got data: ~p~n", [Data]),
@@ -97,7 +97,14 @@ loop(#state{port=Port, last=Last} = State) ->
     %% after 0 ->
 	    receive
 		{Pid, Ref, data} ->
-		    Pid ! {Ref, State#state.data},
+		    Pid ! {Ref, Data},
+		    loop(State);
+
+		{Pid, Ref, {data, Last}} ->
+		    Pid ! {Ref, Last},
+		    loop(State);
+		{Pid, Ref, {data, _Older}} ->
+		    Pid ! {Ref, {Last, Data}},
 		    loop(State);
 		
 		{'EXIT', Port, _Reason} ->
@@ -126,8 +133,8 @@ loop(#state{port=Port, last=Last} = State) ->
 		    end,
 		    loop(State);
 		
-		{Port, {data, Data}} ->
-		    loop(State#state{last=make_ref(), data=binary_to_term(Data)});
+		{Port, {data, PortData}} ->
+		    loop(State#state{last=make_ref(), data=binary_to_term(PortData)});
 		
 		_Other ->
 		    %%stop_biniou(Port),
