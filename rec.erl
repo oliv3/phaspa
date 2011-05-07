@@ -6,23 +6,18 @@
 -module(rec).
 -author('olivier@biniou.info').
 
-%% TEMP debug
--compile([export_all]).
-
 -include("debug.hrl").
 
 %% Module API
 -export([new/0, destroy/0]).
 -export([record/1, stop/0]).
+-export([data/1]).
+
+%% DEBUG
 -export([data/0]).
 
 %% Internal exports
 -export([boot/0]).
-
-start() ->
-    rec:new(),
-    rec:record(44100).
-
 
 %% -define(STOP_CHAR, <<"S">>).
 
@@ -89,14 +84,17 @@ stop() ->
 data() ->
     do(data).
 
+data(Last) ->
+    do({data, Last}).
 
-loop(#state{port=Port} = State) ->
-    receive
-	{Port, {data, Data}} ->
-	    %% ?D_F("Got data: ~p~n", [Data]),
-	    loop(State#state{last=make_ref(), data=binary_to_term(Data)})
+
+loop(#state{port=Port, last=Last} = State) ->
+    %% receive
+    %% 	{Port, {data, Data}} ->
+    %% 	    %% ?D_F("Got data: ~p~n", [Data]),
+    %% 	    loop(State#state{last=make_ref(), data=binary_to_term(Data)})
 		
-    after 0 ->
+    %% after 0 ->
 	    receive
 		{Pid, Ref, data} ->
 		    Pid ! {Ref, State#state.data},
@@ -134,7 +132,7 @@ loop(#state{port=Port} = State) ->
 		_Other ->
 		    %%stop_biniou(Port),
 		    ?D_UNHANDLED(_Other)
-	    end
+	    %% end
     end.
 
 
