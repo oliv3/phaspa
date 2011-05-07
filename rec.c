@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 
 /* TODO: pass it as an option to start */
-#define INSIZE	   256
+#define INSIZE	   64 // 256
 #define ABUFF_SIZE INSIZE * 1 /* channels */  * sizeof(float)
 
 
@@ -71,6 +71,8 @@ ok() {
 static void
 error() {
   ei_x_buff result;
+
+  // fprintf(stderr, "IN ERROR\n");
 
   check(ei_x_new_with_version(&result));
   check(ei_x_encode_tuple_header(&result, 2));
@@ -151,12 +153,15 @@ record(void *args) {
 	/* check(ei_x_encode_double(&result, sp->spoints[i].coords[0])); */
 	/* check(ei_x_encode_double(&result, sp->spoints[i].coords[1])); */
 	/* check(ei_x_encode_double(&result, sp->spoints[i].coords[2])); */
+
+	// TODO rescale: / SHRT_MIN
 	check(ei_x_encode_double(&result, pa_buff[i]));
       }
       check(ei_x_encode_empty_list(&result));
 
+      // fprintf(stderr, "SENDING DATA\n");
+
       write_cmd(&result);
-      fflush(stdout);
       ei_x_free(&result);
     }
   }
@@ -178,7 +183,8 @@ start_recording() {
 static void
 stop_recording() {
   recording = 0;
-  pthread_join(recorder, NULL);
+  /* brutally kill thread, so it stops sending data */
+  pthread_cancel(recorder);
   ok();
 }
 
@@ -310,6 +316,8 @@ write_exact(char *buf, uint32_t len) {
       return i;
     wrote += i;
   } while (wrote<len);
+
+  fflush(stdout);
 
   return len;
 }
