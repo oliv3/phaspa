@@ -28,7 +28,7 @@
 %% GL widget state
 -record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV, frame, gl, mouse,
 		%% scaling
-		scale=2.0, %% 1.0,
+		scale=1.0,
 		%% drawing mode
 		mode=?GL_POINTS,
 		%% display-list stuff
