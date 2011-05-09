@@ -21,7 +21,7 @@ start() ->
     Wx = wx:new(),
     win:new(Wx),
     rec:new(),
-    rec:record(4410),
+    rec:record(1000),
     ?D_REGISTER(?SERVER, self()),
     tick(?IFPS),
     loop(),
