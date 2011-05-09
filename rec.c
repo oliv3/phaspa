@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 
 /* TODO: pass INSIZE it as an option to start */
-#define INSIZE	   512
+#define INSIZE	   256
 #define CHANNELS   2
 #define NSAMPLES   (INSIZE*CHANNELS)
 #define ABUFF_SIZE NSAMPLES * sizeof(float)
@@ -46,16 +46,6 @@ static uint32_t write_exact(char *buf, uint32_t len);
 #else
 #define D(F, A) {}
 #endif
-
-
-static void
-rescale_buff()
-{
-  int i;
-
-  for (i = 0; i < NSAMPLES; i++)
-    pa_buff[i] /= (float)-SHRT_MIN;
-}
 
 
 static inline void
@@ -150,9 +140,6 @@ record(void *args) {
     if (-1 != n) {
       int i;
       ei_x_buff result;
-
-      /* rescale data to [-1.0 .. +1.0] */
-      // rescale_buff();
 
       /* Prepare the output buffer that will hold the result */
       check(ei_x_new_with_version(&result));
