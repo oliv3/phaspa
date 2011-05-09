@@ -14,6 +14,8 @@
 -export([record/1, stop/0]).
 -export([data/1]).
 
+-export([phase/1, antiphase/1]).
+
 %% DEBUG
 -export([data/0]).
 
@@ -36,7 +38,8 @@ new() ->
 boot(Parent) ->
     %% TODO use code:priv_dir() later
     Cmd = "./rec",
-    Port = open_port({spawn_executable, Cmd}, [{packet, 4}, in, out, binary]),
+    %% Port = open_port({spawn_executable, Cmd}, [{packet, 4}, in, out, binary]),
+    Port = open_port({spawn_executable, Cmd}, [{packet, 4}, binary]),
     register(?SERVER, self()),
     Parent ! started,
     loop(#state{port=Port}).
@@ -102,8 +105,12 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
 	    loop(State);
 
 	{Port, {data, PortData}} ->
-	    RawData = binary_to_term(PortData),
-	    NewData = process(RawData, []),
+	    RawData0 = binary_to_term(PortData),
+	    %% ?D_F("RawData0= ~p~n", [RawData0]),
+	    %% RawData1 = mix(RawData0, fun phase/1),
+	    RawData1 = mix(RawData0, fun antiphase/1),
+	    %% ?D_F("RawData1= ~p~n", [RawData1]),
+	    NewData = process(RawData1, []),
 	    loop(State#state{last=make_ref(), data=NewData});
 
 	_Other ->
@@ -127,3 +134,14 @@ process([X,Y,Z|Tail], Acc) ->
     process([Y,Z|Tail], [Point|Acc]);
 process(_Rest, Acc) ->
     Acc.
+
+
+%% phase/antiphase mean
+phase({Left, Right}) ->
+    (Left+Right)/2.
+antiphase({Left, Right}) ->
+    (Left-Right)/2.
+
+
+mix(Data, F) ->
+    [F(Sample) || Sample <- Data].
