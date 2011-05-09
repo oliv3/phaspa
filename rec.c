@@ -8,22 +8,13 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
-// #define NORMAL_DSP
-
 /* TODO: pass INSIZE it as an option to start */
-#define INSIZE	   256
-
-#ifdef NORMAL_DSP
-#define CHANNELS   1
-#else
+#define INSIZE	   512
 #define CHANNELS   2
-#endif
-static void fix_buff();
+#define NSAMPLES   (INSIZE*CHANNELS)
+#define ABUFF_SIZE NSAMPLES * sizeof(float)
 
-#define ABUFF_SIZE INSIZE * CHANNELS * sizeof(float)
-
-static float pa_buff[INSIZE*CHANNELS];
-static float out_buff[INSIZE];
+static float pa_buff[NSAMPLES];
 static pa_simple *pa_s = NULL;
 static pthread_t recorder;
 static long frequency = -1;
@@ -55,6 +46,16 @@ static uint32_t write_exact(char *buf, uint32_t len);
 #else
 #define D(F, A) {}
 #endif
+
+
+static void
+rescale_buff()
+{
+  int i;
+
+  for (i = 0; i < NSAMPLES; i++)
+    pa_buff[i] /= (float)-SHRT_MIN;
+}
 
 
 static inline void
@@ -144,13 +145,14 @@ record(void *args) {
     int error;
 
     n = pa_simple_read(pa_s, (void *)pa_buff, ABUFF_SIZE, &error);
-    fix_buff();
-
     // D("%s", "RECORD ON");
 
     if (-1 != n) {
       int i;
       ei_x_buff result;
+
+      /* rescale data to [-1.0 .. +1.0] */
+      // rescale_buff();
 
       /* Prepare the output buffer that will hold the result */
       check(ei_x_new_with_version(&result));
@@ -159,14 +161,10 @@ record(void *args) {
       check(ei_x_encode_list_header(&result, INSIZE));
 
       /* List elements */
-      for (i = 0; i < INSIZE; i++) {
-	/* check(ei_x_encode_tuple_header(&result, 3)); */
-	/* check(ei_x_encode_double(&result, sp->spoints[i].coords[0])); */
-	/* check(ei_x_encode_double(&result, sp->spoints[i].coords[1])); */
-	/* check(ei_x_encode_double(&result, sp->spoints[i].coords[2])); */
-
-	// TODO rescale: / SHRT_MIN
-	check(ei_x_encode_double(&result, out_buff[i]));
+      for (i = 0; i < NSAMPLES; i+=2) {
+	check(ei_x_encode_tuple_header(&result, 2));
+	check(ei_x_encode_double(&result, pa_buff[i]));
+	check(ei_x_encode_double(&result, pa_buff[i+1]));
       }
       check(ei_x_encode_empty_list(&result));
 
@@ -206,8 +204,6 @@ main(int argc, char **argv) {
   uint32_t size = BUF_SIZE;
   char     command[MAXATOMLEN];
   int      index, version;
-
-  // D("======> %s", "CHUISLAAAAAA");
 
   if ((buf = (char *)calloc(size, sizeof(char))) == NULL)
     return -1;
@@ -332,28 +328,3 @@ write_exact(char *buf, uint32_t len) {
 
   return len;
 }
-
-
-#ifdef NORMAL_DSP
-static void
-fix_buff()
-{
-  int i;
-
-  for (i = 0; i < INSIZE; i++)
-    out_buff[i] = pa_buff[i]/(float)-SHRT_MIN;
-}
-#else
-static void
-fix_buff()
-{
-  int i, j=0;
-
-  for (i = 0; i < INSIZE; i++) {
-    float tmp = pa_buff[i] - pa_buff[i+1];
-    tmp /= 2;
-    out_buff[j++] = tmp;//tmp/(float)-SHRT_MIN;
-    // fprintf(stderr, "%f ", out_buff[i]);
-  }
-}
-#endif
