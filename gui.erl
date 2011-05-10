@@ -25,6 +25,8 @@ start() ->
     ?D_REGISTER(?SERVER, self()),
     tick(?IFPS),
     loop(),
+    rec:stop(),
+    rec:destroy(),
     wx:destroy().
 
 
