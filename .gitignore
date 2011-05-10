@@ -1,4 +1,5 @@
 rec
+spline
 *.o
 raw/
 *~
