@@ -56,7 +56,7 @@ static void
 error() {
   ei_x_buff result;
 
-  // fprintf(stderr, "IN ERROR\n");
+  D("%s", "Error !");
 
   check(ei_x_new_with_version(&result));
   check(ei_x_encode_tuple_header(&result, 2));
@@ -102,13 +102,13 @@ record(void *args) {
 
   pa_sample_spec_snprint(ss_a, sizeof(ss_a), &ss);
   D("Opening the recording stream with sample specification '%s'", ss_a);
+  D("%s", "Start recording");
 
   while (recording) {
     int n;
     int error;
 
     n = pa_simple_read(pa_s, (void *)pa_buff, ABUFF_SIZE, &error);
-    D("%s", "Recording");
 
     if (-1 != n) {
       int i;
@@ -128,7 +128,7 @@ record(void *args) {
       }
       check(ei_x_encode_empty_list(&result));
 
-      // fprintf(stderr, "SENDING DATA\n");
+      D("%s", "Sending data");
 
       write_cmd(&result);
       ei_x_free(&result);
@@ -151,6 +151,7 @@ start_recording() {
 
 static void
 stop_recording() {
+  D("%s", "Stop recording");
   recording = 0;
   /* brutally kill thread, so it stops sending data */
   pthread_cancel(recorder);
@@ -188,7 +189,7 @@ main(int argc, char **argv) {
      *   starter le thread -> ok, {error, already_started} sinon
      */
     if (!ei_decode_atom(buf, &index, command)) {
-      D("got atom: %s", command);
+      D("Got atom: %s", command);
       if (!strcmp(command, "stop")) {
 	if (recording)
 	  stop_recording();
@@ -201,16 +202,16 @@ main(int argc, char **argv) {
       // long _span;
 
       check(ei_decode_tuple_header(buf, &index, &arity));
-      D("ARITY: %d", arity);
+      D("Arity: %d", arity);
       // if (arity != 3) check(-1);
       if (arity != 2) check(-1);
 
       check(ei_decode_atom(buf, &index, command));
-      D("got atom 2: %s", command);
+      D("Got atom: %s", command);
       if (strcmp(command, "record")) check(-1);
 
       check(ei_decode_long(buf, &index, &frequency));
-      D("FREQ: %li", frequency);
+      D("Freq: %li", frequency);
 
       /* check(ei_decode_long(buf, &index, &_span)); */
       /* span = _span; */
