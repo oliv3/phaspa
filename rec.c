@@ -105,12 +105,10 @@ record(void *args) {
 
 #ifdef DEBUG
   pa_sample_spec_snprint(ss_a, sizeof(ss_a), &ss);
-  fprintf(stderr,
-          "Opening the recording stream with sample specification '%s'.\r\n",
-          ss_a);
+  D("Opening the recording stream with sample specification '%s'", ss_a);
 
   frame_size = pa_frame_size(&ss);
-  fprintf(stderr, "Frame size: %d\r\n", frame_size);
+  D("Frame size: %d", frame_size);
 #endif
 
   while (recording) {
