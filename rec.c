@@ -2,11 +2,10 @@
 #include <stdlib.h>
 #include <pulse/simple.h>
 #include <pulse/error.h>
-#include <ei.h>
-#include <unistd.h>
 #include <string.h>
 #include <pthread.h>
 #include <arpa/inet.h>
+#include "marshal.h"
 
 /* TODO: pass INSIZE it as an option to start */
 #define INSIZE	   256
@@ -35,11 +34,6 @@ static int recording = 0;
 
 #define DEBUG
 #define BUF_SIZE 65535
-
-static uint32_t read_cmd(char *buf, uint32_t *size);
-static uint32_t write_cmd(ei_x_buff* x);
-static uint32_t read_exact(char *buf, uint32_t len);
-static uint32_t write_exact(char *buf, uint32_t len);
 
 #ifdef DEBUG
 #define D(F, A) do { fprintf(stderr, F "\r\n", A); fflush(stderr); } while (0)
@@ -255,63 +249,4 @@ main(int argc, char **argv) {
   free(buf);
 
   return 0;
-}
-
-
-/*-----------------------------------------------------------------
- * Data marshalling functions
- *----------------------------------------------------------------*/
-static uint32_t
-read_cmd(char *buf, uint32_t *size) {
-  uint32_t plen, len;
-
-  if (read_exact((char *)&plen, 4) != 4)
-    return(-1);
-
-  len = ntohl(plen);
-  D("Reading %d bytes", len);
-
-  return read_exact(buf, len);
-}
-
-
-static uint32_t
-write_cmd(ei_x_buff *buff) {
-  uint32_t len = buff->index;
-  uint32_t plen;
-
-  plen = htonl(len);
-  write_exact((char *)&plen, 4);
-
-  return write_exact(buff->buff, len);
-}
-
-
-static uint32_t
-read_exact(char *buf, uint32_t len) {
-  uint32_t i, got = 0;
-
-  do {
-    if ((i = read(0, buf+got*sizeof(char), (len-got)*sizeof(char))) <= 0)
-      return i;
-    got += i;
-  } while (got <len);
-
-  return len;
-}
-
-
-static uint32_t
-write_exact(char *buf, uint32_t len) {
-  uint32_t i, wrote = 0;
-
-  do {
-    if ((i = write(1, buf+wrote, len-wrote)) <= 0)
-      return i;
-    wrote += i;
-  } while (wrote<len);
-
-  fflush(stdout);
-
-  return len;
 }
