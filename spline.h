@@ -1,27 +1,25 @@
 /*
- *  Copyright 1994-2011 Olivier Girondel
- *
- *  This file is part of lebiniou.
- *
- *  lebiniou is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  lebiniou is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with lebiniou. If not, see <http://www.gnu.org/licenses/>.
+ *  Copyright 2011 Olivier Girondel
  */
 
-#ifndef __BINIOU_SPLINE_H
-#define __BINIOU_SPLINE_H
+#ifndef __SPLINE_H
+#define __SPLINE_H
 
-#include "utils.h"
-#include "point3d.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+
+
+typedef struct _Point3d_s {
+  float x;
+  float y;
+  float z;
+} _Point3d_t;
+
+typedef union Point3d_u {
+  _Point3d_t pos;
+  float      coords[3];
+} Point3d_t;
 
 
 typedef struct Spline_s {
@@ -40,6 +38,4 @@ void Spline_delete(Spline_t *);
 void Spline_info(const Spline_t *);
 void Spline_compute(const Spline_t *);
 
-/* TODO Spline_draw (fully connected or not) dans un Buffer_8bits */
-
-#endif /* __BINIOU_SPLINE_H */
+#endif /* __SPLINE_H */

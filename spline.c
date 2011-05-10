@@ -24,7 +24,7 @@ Spline_t *
 Spline_new(const u_char span, const u_long nb_cpoints)
 {
   u_char dd;
-  Spline_t *s = xcalloc(1, sizeof(Spline_t));
+  Spline_t *s = calloc(1, sizeof(Spline_t));
 	
   s->span = span;
   s->nb_cpoints = nb_cpoints;
@@ -33,10 +33,10 @@ Spline_new(const u_char span, const u_long nb_cpoints)
   s->dt = 1.0 / (float)s->span;
 	
   for (dd = 0; dd < 8; dd++)
-    s->space[dd] = xcalloc(nb_cpoints, sizeof(float));
+    s->space[dd] = calloc(nb_cpoints, sizeof(float));
 	
-  s->cpoints = xcalloc(s->nb_cpoints, sizeof(Point3d_t));
-  s->spoints = xcalloc(s->nb_spoints, sizeof(Point3d_t));
+  s->cpoints = calloc(s->nb_cpoints, sizeof(Point3d_t));
+  s->spoints = calloc(s->nb_spoints, sizeof(Point3d_t));
 
   return s;
 }
@@ -47,13 +47,13 @@ Spline_delete(Spline_t *s)
 {
   u_char dd;
 
-  xfree(s->cpoints);
-  xfree(s->spoints);
+  free(s->cpoints);
+  free(s->spoints);
 
   for (dd = 0; dd < 8; dd++)
-    xfree(s->space[dd]);
+    free(s->space[dd]);
 
-  xfree(s);
+  free(s);
 }
 
 
@@ -142,8 +142,10 @@ Spline_compute(const Spline_t *s)
       (*v++).coords[k] = *d;
 #ifdef DEBUG
       lcount++;
-      if (lcount > s->nb_spoints)
-	xerror("spline fatal: %d points, wanted to set %d\n", s->nb_spoints, lcount);
+      if (1) { //lcount > s->nb_spoints) {
+	fprintf(stderr, "spline fatal: %li points, wanted to set %li\n", s->nb_spoints, lcount);
+	exit(1);
+      }
     }
 #endif
   }
@@ -153,9 +155,7 @@ Spline_compute(const Spline_t *s)
 void
 Spline_info(const Spline_t *s)
 {
-  if (s == NULL)
-    xerror("Windows va redemarrer");
-  else {
+  if (s != NULL) {
     printf("[s] Spline has span: %d\n", s->span);
     printf("[s] %li control points\n", s->nb_cpoints);
     printf("[s] %li spline points\n", s->nb_spoints);
