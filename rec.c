@@ -1,10 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <pulse/simple.h>
 #include <pulse/error.h>
-#include <string.h>
 #include <pthread.h>
-#include <arpa/inet.h>
 #include "marshal.h"
 
 /* TODO: pass INSIZE it as an option to start */
