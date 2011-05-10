@@ -75,10 +75,7 @@ void *
 record(void *args) {
   int error;
   pa_sample_spec ss;
-#ifdef DEBUG
   char ss_a[PA_SAMPLE_SPEC_SNPRINT_MAX];
-  size_t frame_size;
-#endif
 
   memset(pa_buff, 0, ABUFF_SIZE);
 
@@ -103,13 +100,8 @@ record(void *args) {
     exit(1);
   }
 
-#ifdef DEBUG
   pa_sample_spec_snprint(ss_a, sizeof(ss_a), &ss);
   D("Opening the recording stream with sample specification '%s'", ss_a);
-
-  frame_size = pa_frame_size(&ss);
-  D("Frame size: %d", frame_size);
-#endif
 
   while (recording) {
     int n;
