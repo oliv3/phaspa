@@ -2,6 +2,7 @@
 #include <pulse/error.h>
 #include <pthread.h>
 #include "marshal.h"
+#undef DEBUG
 #include "debug.h"
 
 #define BUF_SIZE 65535
