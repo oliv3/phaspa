@@ -2,6 +2,9 @@
 #include <pulse/error.h>
 #include <pthread.h>
 #include "marshal.h"
+#include "debug.h"
+
+#define BUF_SIZE 65535
 
 /* TODO: pass INSIZE it as an option to start */
 #define INSIZE	   256
@@ -27,16 +30,6 @@ static int recording = 0;
  * stop                -> ok | {error, not_started}
  *
  */
-
-#define DEBUG
-#define BUF_SIZE 65535
-
-#ifdef DEBUG
-#define D(F, A) do { fprintf(stderr, F "\r\n", A); fflush(stderr); } while (0)
-#else
-#define D(F, A) {}
-#endif
-
 
 static inline void
 check(int val) {
@@ -125,7 +118,7 @@ record(void *args) {
     int error;
 
     n = pa_simple_read(pa_s, (void *)pa_buff, ABUFF_SIZE, &error);
-    // D("%s", "RECORD ON");
+    D("%s", "Recording");
 
     if (-1 != n) {
       int i;

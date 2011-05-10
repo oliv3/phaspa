@@ -12,19 +12,21 @@ ERLC_FLAGS = +debug_info +native
 
 # ---- C
 ERL_LIB=/usr/local/lib/erlang/lib/erl_interface-3.7.3
-CFLAGS=-O3 -Wall -I$(ERL_LIB)/include -Werror
+CPPFLAGS=-I$(ERL_LIB)/include
+CFLAGS=-O3 -Wall -Werror
 LDFLAGS=-L$(ERL_LIB)/lib `pkg-config libpulse-simple --libs` -lerl_interface -lei -lpthread
 REC_OBJS=rec.o marshal.o
 SPL_OBJS=spline.o marshal.o
+DEBUG=-DDEBUG
 
 marshal.o: marshal.h marshal.c
-rec.o: rec.c marshal.h
+rec.o: rec.c marshal.h debug.h
 
 rec: $(REC_OBJS)
-	gcc $(REC_OBJS) $(LDFLAGS) -o $@ -lerl_interface -lei -lpthread
+	gcc $(REC_OBJS) $(LDFLAGS) $(DEBUG) -o $@ -lerl_interface -lei -lpthread
 
 %.o: %.c
-	gcc $(DEBUG) -c $(CFLAGS) $< -o $@
+	gcc $(CPPFLAGS) $(DEBUG) $(CFLAGS) -c $< -o $@
 
 clean:
 	@rm -f *~ *.beam erl_crash.dump rec
