@@ -132,7 +132,7 @@ port_command_wrapper(Port, Pid, Ref, Cmd) ->
     receive
 	{Port, {data, BinResult}} ->
 	    Result = binary_to_term(BinResult),
-	    ?D_F("Cmd: ~p Result: ~p~n", [Cmd, Result]),
+	    %% ?D_F("Cmd: ~p Result: ~p~n", [Cmd, Result]),
 	    Pid ! {Ref, Result}
     end.
 

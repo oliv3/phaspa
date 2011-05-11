@@ -24,11 +24,12 @@
 -define(SERVER, ?MODULE).
 
 %% -define(OLD, true).
+-define(PSIZE, 1.0).
 
 %% GL widget state
 -record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV, frame, gl, mouse,
 		%% scaling
-		scale=1.0,
+		scale=1.5,
 		%% drawing mode
 		mode=?GL_POINTS,
 		%% display-list stuff
@@ -84,6 +85,7 @@ handle_event(#wx{event=#wxMouse{type=motion, leftDown=true, x=X, y=Y}}, #state{r
     NRX = trunc(RX+DY+360) rem 360,
     NRY = trunc(RY+DX+360) rem 360,
     NewRot = {NRX, NRY, RZ},
+    %% io:format("New Rot: ~p~n", [NewRot]),
     {noreply, State#state{rot=NewRot, mouse={X, Y}}};
 
 handle_event(#wx{event=#wxMouse{type=motion}}, State) ->
@@ -209,7 +211,7 @@ make_list(Mode, OldList, Points) ->
 make_list2(Mode, Points) ->
     NewList = gl:genLists(1),
     gl:newList(NewList, ?GL_COMPILE_AND_EXECUTE),
-    gl:pointSize(3.0),
+    gl:pointSize(?PSIZE),
     gl:'begin'(Mode),
     add_points(Points),
     gl:'end'(),
@@ -223,7 +225,7 @@ make_list2(Mode, Points) ->
     gl:disable(?GL_BLEND),
     gl:enable(?GL_ALPHA_TEST),
     gl:alphaFunc(?GL_GREATER, 0.5),
-    gl:pointSize(3.0),
+    gl:pointSize(?PSIZE),
     gl:'begin'(Mode),
     add_points(Points),
     gl:'end'(),
@@ -234,6 +236,6 @@ make_list2(Mode, Points) ->
 add_points([]) ->
     ok;
 add_points([#point3d{x=X, y=Y, z=Z, r=R, g=G, b=B}|Points]) ->
-    gl:color3ub(R, G, B),
+    gl:color3f(R, G, B),
     gl:vertex3f(X, Y, Z),
     add_points(Points).

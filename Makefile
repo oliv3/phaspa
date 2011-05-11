@@ -17,11 +17,11 @@ CFLAGS=-O3 -Wall -Werror
 LDFLAGS=-L$(ERL_LIB)/lib `pkg-config libpulse-simple --libs` -lerl_interface -lei -lpthread
 REC_OBJS=rec.o marshal.o
 SPL_OBJS=spline.o spline_main.o marshal.o
-DEBUG=-DDEBUG
+# DEBUG=-DDEBUG
 
 marshal.o: marshal.h marshal.c
 rec.o: rec.c marshal.h debug.h
-spline.o: spline.h
+spline.o: spline.h debug.h
 spline_main.o: spline_main.c spline.h marshal.h debug.h
 
 rec: $(REC_OBJS)

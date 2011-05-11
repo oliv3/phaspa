@@ -117,7 +117,7 @@ main(int argc, char **argv) {
       spline->cpoints[p].pos.y = y;
       spline->cpoints[p].pos.z = z;
 
-      fprintf(stderr, "  > Point: %f, %f, %f\r\n", x, y, z);
+      // fprintf(stderr, "  > Point: %f, %f, %f\r\n", x, y, z);
     }
     
     Spline_compute(spline);

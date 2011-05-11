@@ -20,13 +20,15 @@ start() ->
     process_flag(trap_exit, true),
     Wx = wx:new(),
     win:new(Wx),
+    spline:new(),
     rec:new(),
-    rec:record(1000),
+    rec:record(8000),
     ?D_REGISTER(?SERVER, self()),
     tick(?IFPS),
     loop(),
     rec:stop(),
     rec:destroy(),
+    spline:destroy(),
     wx:destroy().
 
 
