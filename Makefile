@@ -1,6 +1,5 @@
 all: gui.beam win.beam screen.beam wirecube.beam raw_file.beam \
-	rec rec.beam spline
-# spline.beam
+	rec rec.beam spline spline.beam
 
 run:
 	erl -noshell -s gui

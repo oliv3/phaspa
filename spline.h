@@ -24,11 +24,11 @@ typedef union Point3d_u {
 
 typedef struct Spline_s {
   u_char    span;
+  u_long     nb_cpoints;
+  u_long     nb_spoints;
 	
   float     *space[8], dt;
   Point3d_t *cpoints, *spoints;
-  u_long     nb_cpoints;
-  u_long     nb_spoints;
 } Spline_t;
 
 

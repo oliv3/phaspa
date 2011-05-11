@@ -30,12 +30,16 @@ Spline_new(const u_char span, const u_long nb_cpoints)
   s->nb_cpoints = nb_cpoints;
 	
   s->nb_spoints = (s->nb_cpoints-1) * s->span + 1;
+  fprintf(stderr, "******* NB_CPOINTS= %li\r\n", s->nb_cpoints);
+  fprintf(stderr, "******* NB_SPOINTS= %li\r\n", s->nb_spoints);
   s->dt = 1.0 / (float)s->span;
 	
   for (dd = 0; dd < 8; dd++)
     s->space[dd] = calloc(nb_cpoints, sizeof(float));
 	
+  // s->cpoints = calloc(s->nb_cpoints, sizeof(Point3d_t));
   s->cpoints = calloc(s->nb_cpoints, sizeof(Point3d_t));
+  //s->spoints = calloc(s->nb_spoints, sizeof(Point3d_t));
   s->spoints = calloc(s->nb_spoints, sizeof(Point3d_t));
 
   return s;
@@ -142,7 +146,7 @@ Spline_compute(const Spline_t *s)
       (*v++).coords[k] = *d;
 #ifdef DEBUG
       lcount++;
-      if (1) { //lcount > s->nb_spoints) {
+      if (lcount > s->nb_spoints) {
 	fprintf(stderr, "spline fatal: %li points, wanted to set %li\n", s->nb_spoints, lcount);
 	exit(1);
       }
