@@ -1,5 +1,5 @@
 #include "marshal.h"
-// #undef DEBUG
+#undef DEBUG
 #include "debug.h"
 #include "spline.h"
 
