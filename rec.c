@@ -1,8 +1,9 @@
 #include <pulse/simple.h>
 #include <pulse/error.h>
 #include <pthread.h>
+#include <assert.h>
 #include "marshal.h"
-#undef DEBUG
+// #undef DEBUG
 #include "debug.h"
 
 #define BUF_SIZE 65535
@@ -62,10 +63,11 @@ error() {
   check(ei_x_new_with_version(&result));
   check(ei_x_encode_tuple_header(&result, 2));
   check(ei_x_encode_atom(&result, "error"));
-  if (recording)
-    check(ei_x_encode_atom(&result, "already_started"));
-  else
-    check(ei_x_encode_atom(&result, "not_started"));
+  // if (recording)
+  assert(recording);
+  check(ei_x_encode_atom(&result, "already_started"));
+  //else
+  //check(ei_x_encode_atom(&result, "not_started"));
   
   write_cmd(&result);
   ei_x_free(&result);
@@ -129,7 +131,7 @@ record(void *args) {
       }
       check(ei_x_encode_empty_list(&result));
 
-      D("%s", "Sending data");
+      // D("%s", "Sending data");
 
       write_cmd(&result);
       ei_x_free(&result);
@@ -190,12 +192,12 @@ main(int argc, char **argv) {
      *   starter le thread -> ok, {error, already_started} sinon
      */
     if (!ei_decode_atom(buf, &index, command)) {
-      D("Got atom: %s", command);
+      // D("Got atom: %s", command);
       if (!strcmp(command, "stop")) {
 	if (recording)
 	  stop_recording();
 	else
-	  error();
+	  ok();
       } else
 	check(-1);
     } else {
@@ -203,16 +205,15 @@ main(int argc, char **argv) {
       // long _span;
 
       check(ei_decode_tuple_header(buf, &index, &arity));
-      D("Arity: %d", arity);
-      // if (arity != 3) check(-1);
+      // D("Arity: %d", arity);
       if (arity != 2) check(-1);
 
       check(ei_decode_atom(buf, &index, command));
-      D("Got atom: %s", command);
+      // D("Got atom: %s", command);
       if (strcmp(command, "record")) check(-1);
 
       check(ei_decode_long(buf, &index, &frequency));
-      D("Freq: %li", frequency);
+      // D("Freq: %li", frequency);
 
       /* check(ei_decode_long(buf, &index, &_span)); */
       /* span = _span; */
