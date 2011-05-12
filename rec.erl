@@ -103,7 +103,7 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
 	    loop(State);
 
 	{Pid, Ref, stop = Cmd} ->
-	    port_command_wrapper(Port, Pid, Ref, Cmd),
+	    port_command_wrapper(Port, Pid, Ref, Cmd, ok),
 	    loop(State);
 
 	{Port, {data, PortData}} ->
@@ -130,6 +130,22 @@ port_command_wrapper(Port, Pid, Ref, Cmd) ->
 	    Result = binary_to_term(BinResult),
 	    %% ?D_F("Cmd: ~p Result: ~p~n", [Cmd, Result]),
 	    Pid ! {Ref, Result}
+    end.
+
+port_command_wrapper(Port, Pid, Ref, Cmd, Expected) ->
+    port_command(Port, term_to_binary(Cmd)),
+    port_command_wrapper2(Port, Pid, Ref, Expected).
+port_command_wrapper2(Port, Pid, Ref, Expected) ->
+    receive
+	{Port, {data, BinResult}} ->
+	    Result = binary_to_term(BinResult),
+	    %% ?D_F("Cmd: ~p Result: ~p~n", [Cmd, Result]),
+	    case Result of
+		Expected ->
+		    Pid ! {Ref, Result};
+		_Other ->
+		    port_command_wrapper2(Port, Pid, Ref, Expected)
+	    end
     end.
 
 
