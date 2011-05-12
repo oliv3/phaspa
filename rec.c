@@ -156,8 +156,7 @@ static void
 stop_recording() {
   D("%s", "Stop recording");
   recording = 0;
-  /* brutally kill thread, so it stops sending data */
-  pthread_cancel(recorder);
+  pthread_join(recorder, NULL);
   ok();
 }
 
