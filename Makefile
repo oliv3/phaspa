@@ -1,5 +1,5 @@
 all: gui.beam win.beam screen.beam wirecube.beam raw_file.beam \
-	rec rec.beam spline spline.beam
+	rec rec.beam recorder.beam spline spline.beam
 
 run:
 	erl -noshell -s gui
@@ -17,7 +17,7 @@ CFLAGS=-O3 -Wall -Werror
 LDFLAGS=-L$(ERL_LIB)/lib `pkg-config libpulse-simple --libs` -lerl_interface -lei -lpthread
 REC_OBJS=rec.o marshal.o
 SPL_OBJS=spline.o spline_main.o marshal.o
-# DEBUG=-DDEBUG
+DEBUG=-DDEBUG
 
 marshal.o: marshal.h marshal.c
 rec.o: rec.c marshal.h debug.h
