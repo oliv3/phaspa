@@ -31,8 +31,6 @@ Spline_new(const u_char span, const u_long nb_cpoints)
   s->nb_cpoints = nb_cpoints;
 	
   s->nb_spoints = (s->nb_cpoints-1) * s->span + 1;
-  D("******* NB_CPOINTS= %li\r\n", s->nb_cpoints);
-  D("******* NB_SPOINTS= %li\r\n", s->nb_spoints);
   s->dt = 1.0 / (float)s->span;
 	
   for (dd = 0; dd < 8; dd++)
