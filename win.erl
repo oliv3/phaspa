@@ -39,7 +39,7 @@ init([Wx, Size]) ->
 
 
 create_window(Wx, Size) ->
-    Frame = wxFrame:new(Wx, ?wxID_ANY, "PhaSpa",
+    Frame = wxFrame:new(Wx, ?wxID_ANY, "PhaSpaScope",
 			[{pos, {0, 0}},
 			 {size, Size},
 			 {style, ?wxDEFAULT_FRAME_STYLE}]),
