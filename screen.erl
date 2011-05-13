@@ -22,21 +22,33 @@
 -export([init/1, handle_call/3, handle_event/2, terminate/2]).
 
 -define(SERVER, ?MODULE).
+-define(PSIZE, 1.5).
+-define(SPAN, 5).
 
-%% -define(OLD, true).
--define(PSIZE, 1.0).
 
 %% GL widget state
--record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV, frame, gl, mouse,
+-record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV,
+		frame, gl, mouse,
 		%% scaling
 		scale=1.5,
 		%% drawing mode
 		mode=?GL_POINTS,
 		%% display-list stuff
-		last, list=0}).
+		last, base=0}).
 
 -define(ZMAX, 5.0).
 -define(SCALE_STEP, 0.2).
+
+-define(MONO,  0).
+-define(LEFT,  1).
+-define(RIGHT, 2).
+
+-define(O, 1.0).
+-define(Z, 0.0).
+-define(MONO_C,  {?O, ?O, ?O}).
+-define(LEFT_C,  {?Z, ?Z, ?O}).
+-define(RIGHT_C, {?O, ?Z, ?Z}).
+
 
 draw() ->
     wx_object:call(?SERVER, draw).
@@ -47,7 +59,8 @@ handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV, gl=GL, scale=Scale}
     set_view(Size, Rot, FOV),
     wirecube:draw(),
     gl:scalef(Scale, Scale, Scale),
-    NewState = draw_list(State),
+    NewState = make_lists(State),
+    draw_list(State, ?MONO),
     wxGLCanvas:swapBuffers(GL),
     {reply, ok, NewState}.
 
@@ -192,50 +205,72 @@ set_view({Width, Height}, Rot, FOV) ->
     gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT).
 
 
-draw_list(#state{last=Last, list=List, mode=Mode} = State) ->
+make_lists(#state{last=Last, base=Base, mode=Mode} = State) ->
     case rec:data(Last) of
 	Last ->
-	    gl:callList(List),
 	    State;
-	{New, Points} ->
-	    NewList = make_list(Mode, List, Points),
-	    State#state{last=New, list=NewList}
+	{New, Channels} ->
+	    gl:deleteLists(Base, 3),
+	    %% ?D_F("Channels: ~p~n", [Channels]),
+	    NewBase = gl:genLists(3),
+	    %% ?D_F("New base: ~p~n", [NewBase]),
+	    make_lists2(Mode, NewBase, Channels),
+	    State#state{last=New, base=NewBase}
     end.
 
+draw_list(#state{last=_Last, base=Base, mode=_Mode} = _State, Id) ->
+    List = Base+Id,
+    %% case rec:data(Last) of
+    %% 	Last ->
+    gl:callList(List).
+    %% 	    State;
+    %% 	{New, Channels} ->
+    %% 	    %% ?D_F("Channels: ~p~n", [Channels]),
+    %% 	    NewBase = make_lists(Mode, List, Channels),
+    %% 	    State#state{last=New, base=NewBase}
+    %% end.
 
-make_list(Mode, OldList, Points) ->
-    gl:deleteLists(OldList, 1),
-    make_list2(Mode, Points).
 
--ifdef(OLD).
-make_list2(Mode, Points) ->
-    NewList = gl:genLists(1),
-    gl:newList(NewList, ?GL_COMPILE_AND_EXECUTE),
-    gl:pointSize(?PSIZE),
+%% make_lists(Mode, OldBase, Channels) ->
+%% %%    gl:deleteLists(OldBase, 3),
+%%     make_lists2(Mode, Channels).
+
+make_lists2(Mode, Base, {Mono, _Left, _Right}) ->
+    %% NewBase = gl:genLists(3),
+    %% FIXME: check que gl:genLists ne renvoie pas 0
+    %% make_list3(Mode, Base+?MONO, takens:embed3(Mono, ?SPAN), ?MONO_C),
+    Mono1 = takens:embed3(Mono),
+    %% ?D_F("yaaaaa ~p~n", [Mono1]),
+    Mono2 = spline:spline(?SPAN, Mono1),
+    %% ?D_F("yaaaaa 2~n", []),
+    make_list3(Mode, Base+?MONO, Mono2, ?MONO_C),
+    %% ?D_F("yaaaaa 3~n", []),
+    %% make_list3(Mode, NewBase+?LEFT, Left, ?LEFT_C),
+    %% make_list3(Mode, NewBase+?RIGHT, Right, ?RIGHT_C),
+    ok.
+
+make_list3(Mode, List, Points, Color) ->
+    gl:newList(List, ?GL_COMPILE_AND_EXECUTE),
+    prepare_gl(),
     gl:'begin'(Mode),
-    add_points(Points),
+    add_points(Points, Color),
     gl:'end'(),
-    gl:endList(),
-    NewList.
--else.
-make_list2(Mode, Points) ->
-    NewList = gl:genLists(1),
-    gl:newList(NewList, ?GL_COMPILE_AND_EXECUTE),
+    gl:endList().
+
+
+prepare_gl() ->
+    gl:pointSize(?PSIZE),
     gl:enable(?GL_POINT_SMOOTH),
     gl:disable(?GL_BLEND),
     gl:enable(?GL_ALPHA_TEST),
-    gl:alphaFunc(?GL_GREATER, 0.5),
-    gl:pointSize(?PSIZE),
-    gl:'begin'(Mode),
-    add_points(Points),
-    gl:'end'(),
-    gl:endList(),
-    NewList.
--endif.
+    gl:alphaFunc(?GL_GREATER, 0.5).
 
-add_points([]) ->
+
+add_points([], _Color) ->
     ok;
-add_points([#point3d{x=X, y=Y, z=Z, r=R, g=G, b=B}|Points]) ->
-    gl:color3f(R, G, B),
-    gl:vertex3f(X, Y, Z),
-    add_points(Points).
+add_points([Point|Points], Color) ->
+    %% ?D_F("Point= ~p~n", [Point]),
+    %% ?D_F("Color= ~p~n", [Color]),
+    gl:color3fv(Color),
+    gl:vertex3fv(Point),
+    add_points(Points, Color).

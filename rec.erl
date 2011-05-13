@@ -16,7 +16,7 @@
 
 -export([phase/1, antiphase/1]).
 
--define(SPAN, 5).
+%% -define(SPAN, 5).
 
 %% DEBUG
 -export([data/0]).
@@ -26,7 +26,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {port, last=make_ref(), data=[]}).
+-record(state, {port, last=make_ref(), data={[], [], []}}).
 
 
 new() ->
@@ -107,12 +107,14 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
 	    loop(State);
 
 	{Port, {data, PortData}} ->
-	    RawData0 = binary_to_term(PortData),
+	    Samples = binary_to_term(PortData),
 
-	    %% RawData1 = mix(RawData0, fun phase/1),
-	    RawData1 = mix(RawData0, fun antiphase/1),
+	    %% Mono = mono(Samples, fun phase/1),
+	    Mono = mono(Samples, fun antiphase/1),
 
-	    NewData = process(RawData1, []),
+	    NewData = {Mono, left(Samples), right(Samples)},
+
+	    %% NewData = process(RawData1, []),
 	    %% NewData = process_rgb(RawData1, [], []),
 
 	    loop(State#state{last=make_ref(), data=NewData});
@@ -150,39 +152,39 @@ port_command_wrapper2(Port, Pid, Ref, Expected) ->
 
 
 %% 3D Takens embedding
-process([X,Y,Z|Tail], Acc) ->
-    Point = {X,Y,Z},
-    process([Y,Z|Tail], [Point|Acc]);
-process(_Rest, Acc) ->
-    Acc1 = spline:spline(?SPAN, Acc),
-    process2(Acc1).
+%% process([X,Y,Z|Tail], Acc) ->
+%%     Point = {X,Y,Z},
+%%     process([Y,Z|Tail], [Point|Acc]);
+%% process(_Rest, Acc) ->
+%%     Acc1 = spline:spline(?SPAN, Acc),
+%%     process2(Acc1).
 
-process2(Points) ->
-    [#point3d{x=X, y=Y, z=Z} || {X,Y,Z} <- Points].
+%% process2(Points) ->
+%%     [#point3d{x=X, y=Y, z=Z} || {X,Y,Z} <- Points].
 
-%% 6D (3+3) Takens embedding
-process_rgb([X,Y,Z,R,G,B|Tail], AccP, AccC) ->
-    Point = {X,Y,Z},
-    Color = {to_rgb(R), to_rgb(G), to_rgb(B)},
-    process_rgb([Y,Z,R,G,B|Tail], [Point|AccP], [Color|AccC]);
-process_rgb(_Rest, AccP, AccC) ->
-    AccP1 = spline:spline(?SPAN, AccP),
-    AccC1 = spline:spline(?SPAN, AccC),
-    process_rgb2(AccP1, AccC1).
+%% %% 6D (3+3) Takens embedding
+%% process_rgb([X,Y,Z,R,G,B|Tail], AccP, AccC) ->
+%%     Point = {X,Y,Z},
+%%     Color = {to_rgb(R), to_rgb(G), to_rgb(B)},
+%%     process_rgb([Y,Z,R,G,B|Tail], [Point|AccP], [Color|AccC]);
+%% process_rgb(_Rest, AccP, AccC) ->
+%%     AccP1 = spline:spline(?SPAN, AccP),
+%%     AccC1 = spline:spline(?SPAN, AccC),
+%%     process_rgb2(AccP1, AccC1).
 
-process_rgb2(Points, Colors) ->
-    process_rgb2(Points, Colors, []).
-process_rgb2([], [], Acc) ->
-    %% io:format("Points6D= ~p~n", [Acc]),
-    Acc;
-process_rgb2([{X,Y,Z}|Points], [{R,G,B}|Colors], Acc) ->
-    P3D = #point3d{x=X, y=Y, z=Z, r=R, g=G, b=B},
-    process_rgb2(Points, Colors, [P3D|Acc]).
+%% process_rgb2(Points, Colors) ->
+%%     process_rgb2(Points, Colors, []).
+%% process_rgb2([], [], Acc) ->
+%%     %% io:format("Points6D= ~p~n", [Acc]),
+%%     Acc;
+%% process_rgb2([{X,Y,Z}|Points], [{R,G,B}|Colors], Acc) ->
+%%     P3D = #point3d{x=X, y=Y, z=Z, r=R, g=G, b=B},
+%%     process_rgb2(Points, Colors, [P3D|Acc]).
 
 
-to_rgb(Val) ->
-    Tmp = (Val+1)/2,
-    255*Tmp.
+%% to_rgb(Val) ->
+%%     Tmp = (Val+1)/2,
+%%     255*Tmp.
 
 
 %% phase/antiphase mean
@@ -192,5 +194,11 @@ antiphase({Left, Right}) ->
     (Left-Right)/2.
 
 
-mix(Data, F) ->
+mono(Data, F) ->
     [F(Sample) || Sample <- Data].
+
+left(Samples) ->
+    [L || {L, _R} <- Samples].
+
+right(Samples) ->
+    [R || {_L, R} <- Samples].
