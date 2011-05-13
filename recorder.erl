@@ -13,10 +13,12 @@
 
 %% wx_object API
 -export([new/1]). %% start_link/1]).
+-export([destroy/0]).
 
 %% wx_object callbacks
--export([init/1]). %%, handle_call/3, handle_cast/2, handle_info/2,
--export([handle_event/2]). %%, terminate/2, code_change/3]).
+-export([init/1]). %%, handle_call/3, handle_info/2,
+-export([handle_cast/2]).
+-export([handle_event/2, terminate/2]). %%, code_change/3]).
 
 -define(SERVER, ?MODULE). 
 
@@ -59,6 +61,9 @@ create_window(Wx, Size) ->
     wxFrame:show(Frame),
     Frame.
 
+destroy() ->
+    wx_object:cast(?SERVER, destroy).
+
 %% handle_event
 %%handle_event(#wx{event = #wxFileDirPicker{type = command_filepicker_changed,
 %%                                          path = Path}}, #state{last=Last, data=Data} = State) ->
@@ -68,3 +73,9 @@ handle_event(#wx{event=#wxSpin{type=command_spinctrl_updated, commandInt=Value}}
     rec:record(Value),
     {noreply, State}.
 
+handle_cast(destroy, State) ->
+    {stop, normal, State}.
+
+
+terminate(_Reason, _State) ->
+    ok.
