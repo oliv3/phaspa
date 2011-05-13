@@ -61,6 +61,8 @@ do(Msg) ->
     end.
 
 
+spline(_Span, List) when length(List) < 3 ->
+    List;
 spline(Span, List) ->
     do({spline, Span, List}).
 
