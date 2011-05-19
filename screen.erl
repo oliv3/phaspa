@@ -21,10 +21,10 @@
 %% wx_object callbacks
 -export([init/1, handle_call/3, handle_event/2, terminate/2]).
 
--define(SERVER, ?MODULE).
--define(PSIZE, 1.5).
--define(SPAN, 5).
-
+-define(SERVER,  ?MODULE).
+-define(PSIZE,   1.5).
+-define(SPAN,    5).
+-define(CAPTURE, stereo). %% | stereo.
 
 %% GL widget state
 -record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV,
@@ -53,14 +53,20 @@
 draw() ->
     wx_object:call(?SERVER, draw).
 
-handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV, gl=GL, scale=Scale} = State) ->
-    %% ?D_F("======= screen / call~n", []),
+handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV, gl=GL, scale=Scale, base=Base} = State) ->
     wxGLCanvas:setCurrent(GL),
     set_view(Size, Rot, FOV),
     wirecube:draw(),
     gl:scalef(Scale, Scale, Scale),
     NewState = make_lists(State),
-    draw_list(State, ?MONO),
+    case ?CAPTURE of
+	mono ->
+	    gl:callList(Base+?MONO);
+
+	stereo ->
+	    gl:callList(Base+?LEFT),
+	    gl:callList(Base+?RIGHT)
+    end,
     wxGLCanvas:swapBuffers(GL),
     {reply, ok, NewState}.
 
@@ -139,36 +145,6 @@ handle_event(#wx{event=#wxKey{keyCode=$M}}, #state{mode=Mode} = State) ->
 		      ?GL_POINTS
 	      end,
     {noreply, State#state{last=make_ref(), mode=NewMode}};
-
-%% handle_event(#wx{event=#wxKey{keyCode=$A}}, State) ->
-%%     ec_cf:toggle(?O_AXES),
-%%     {noreply, State};
-
-%% handle_event(#wx{event=#wxKey{keyCode=$S}}, State) ->
-%%     ec_cf:toggle(?O_SPIN),
-%%     {noreply, State};
-
-%% handle_event(#wx{event=#wxKey{keyCode=$Z}}, State) ->
-%%     ec_cf:no_spin(),
-%%     ec_cf:reset_rot(),
-%%     {noreply, State};
-
-%% handle_event(#wx{event=#wxKey{keyCode=$E}}, State) ->
-%%     ec_cf:toggle(?O_EDGES),
-%%     {noreply, State};
-
-%% handle_event(#wx{event=#wxKey{keyCode=$T}}, State) ->
-%%     ec_cf:toggle(?O_TEXT),
-%%     {noreply, State};
-
-%% handle_event(#wx{event=#wxKey{keyCode=$M}}, State) ->
-%%     ec_cf:toggle(?O_MUTE),
-%%     {noreply, State};
-
-%% handle_event(#wx{event=#wxKey{keyCode=$O}}, State) ->
-%%     ec_cf:toggle(?O_OSD),
-%%     {noreply, State};
-
 handle_event(#wx{event=#wxKey{keyCode=_KC}}, State) ->
     %% ?D_F("Unhandled key: ~p~n", [_KC]),
     {noreply, State}.
@@ -204,54 +180,42 @@ set_view({Width, Height}, Rot, FOV) ->
 
     gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT).
 
+channels(mono) ->
+    1;
+channels(stereo) ->
+    2.
 
 make_lists(#state{last=Last, base=Base, mode=Mode} = State) ->
     case rec:data(Last) of
 	Last ->
 	    State;
 	{New, Channels} ->
-	    gl:deleteLists(Base, 3),
-	    %% ?D_F("Channels: ~p~n", [Channels]),
-	    NewBase = gl:genLists(3),
-	    %% ?D_F("New base: ~p~n", [NewBase]),
-	    make_lists2(Mode, NewBase, Channels),
+	    C = channels(?CAPTURE),
+	    gl:deleteLists(Base, C),
+	    NewBase = gl:genLists(C),
+	    make_lists2(?CAPTURE, Mode, NewBase, Channels),
 	    State#state{last=New, base=NewBase}
     end.
 
-draw_list(#state{last=_Last, base=Base, mode=_Mode} = _State, Id) ->
-    List = Base+Id,
-    %% case rec:data(Last) of
-    %% 	Last ->
-    gl:callList(List).
-    %% 	    State;
-    %% 	{New, Channels} ->
-    %% 	    %% ?D_F("Channels: ~p~n", [Channels]),
-    %% 	    NewBase = make_lists(Mode, List, Channels),
-    %% 	    State#state{last=New, base=NewBase}
-    %% end.
 
-
-%% make_lists(Mode, OldBase, Channels) ->
-%% %%    gl:deleteLists(OldBase, 3),
-%%     make_lists2(Mode, Channels).
-
-make_lists2(Mode, Base, {Mono, _Left, _Right}) ->
-    %% NewBase = gl:genLists(3),
-    %% FIXME: check que gl:genLists ne renvoie pas 0
-    %% make_list3(Mode, Base+?MONO, takens:embed3(Mono, ?SPAN), ?MONO_C),
+make_lists2(mono, Mode, Base, {Mono, _Left, _Right}) ->
     Mono1 = takens:embed3(Mono),
-    %% ?D_F("yaaaaa ~p~n", [Mono1]),
     Mono2 = spline:spline(?SPAN, Mono1),
-    %% ?D_F("yaaaaa 2~n", []),
-    make_list3(Mode, Base+?MONO, Mono2, ?MONO_C),
-    %% ?D_F("yaaaaa 3~n", []),
-    %% make_list3(Mode, NewBase+?LEFT, Left, ?LEFT_C),
-    %% make_list3(Mode, NewBase+?RIGHT, Right, ?RIGHT_C),
-    ok.
+    make_list3(Mode, Base+?MONO, Mono2, ?MONO_C);
+make_lists2(stereo, Mode, Base, {_Mono, Left, Right}) ->
+    Left1 = takens:embed3(Left),
+    Left2 = spline:spline(?SPAN, Left1),
+    make_list3(Mode, Base+?LEFT, Left2, ?LEFT_C),
+
+    Right1 = takens:embed3(Right),
+    Right2 = spline:spline(?SPAN, Right1),
+    make_list3(Mode, Base+?RIGHT, Right2, ?RIGHT_C).
+
 
 make_list3(Mode, List, Points, Color) ->
-    gl:newList(List, ?GL_COMPILE_AND_EXECUTE),
-    prepare_gl(),
+    gl:newList(List, ?GL_COMPILE),
+    gl:pointSize(?PSIZE),
+    %% prepare_gl(),
     gl:'begin'(Mode),
     add_points(Points, Color),
     gl:'end'(),
@@ -259,7 +223,6 @@ make_list3(Mode, List, Points, Color) ->
 
 
 prepare_gl() ->
-    gl:pointSize(?PSIZE),
     gl:enable(?GL_POINT_SMOOTH),
     gl:disable(?GL_BLEND),
     gl:enable(?GL_ALPHA_TEST),
@@ -269,8 +232,6 @@ prepare_gl() ->
 add_points([], _Color) ->
     ok;
 add_points([Point|Points], Color) ->
-    %% ?D_F("Point= ~p~n", [Point]),
-    %% ?D_F("Color= ~p~n", [Color]),
     gl:color3fv(Color),
     gl:vertex3fv(Point),
     add_points(Points, Color).
