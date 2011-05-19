@@ -2,7 +2,7 @@
 -include_lib("wx/include/wx.hrl"). 
 -include_lib("wx/include/gl.hrl"). 
 
--define(FPS, 25).
+-define(FPS, 50).
 -define(IFPS, (trunc(1000/?FPS))).
 
 -define(DEFAULT_FOV, 50).
