@@ -38,7 +38,7 @@
 		%% display-list stuff
 		last, base=0}).
 
--define(ZMAX, 5.0).
+-define(ZMAX, 1000.0).
 -define(SCALE_STEP, 0.2).
 
 -define(MONO,  0).
