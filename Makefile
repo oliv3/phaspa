@@ -1,5 +1,8 @@
-all: gui.beam win.beam screen.beam wirecube.beam raw_file.beam \
-	rec rec.beam recorder.beam spline spline.beam takens.beam
+all: erlang c
+
+erlang:
+	@erl -make all
+c: rec spline
 
 run:
 	erl -noshell -s gui
