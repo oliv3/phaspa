@@ -31,6 +31,8 @@
 		frame, gl, mouse,
 		%% scaling
 		scale=1.5,
+		%% capture mode
+		capture=mono,
 		%% drawing mode
 		mode=?GL_POINTS,
 		%% display-list stuff
@@ -53,13 +55,14 @@
 draw() ->
     wx_object:call(?SERVER, draw).
 
-handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV, gl=GL, scale=Scale, base=Base} = State) ->
+handle_call(draw, _From, #state{capture=Cap, size=Size, rot=Rot, fov=FOV,
+				gl=GL, scale=Scale, base=Base} = State) ->
     wxGLCanvas:setCurrent(GL),
     set_view(Size, Rot, FOV),
     wirecube:draw(),
     gl:scalef(Scale, Scale, Scale),
     NewState = make_lists(State),
-    case ?CAPTURE of
+    case Cap of
 	mono ->
 	    gl:callList(Base+?MONO);
 
@@ -145,6 +148,14 @@ handle_event(#wx{event=#wxKey{keyCode=$M}}, #state{mode=Mode} = State) ->
 		      ?GL_POINTS
 	      end,
     {noreply, State#state{last=make_ref(), mode=NewMode}};
+handle_event(#wx{event=#wxKey{keyCode=$C}}, #state{capture=Cap} = State) ->
+    NewCap = case Cap of
+		 mono ->
+		     stereo;
+		 stereo ->
+		     mono
+	     end,
+    {noreply, State#state{last=make_ref(), capture=NewCap}};
 handle_event(#wx{event=#wxKey{keyCode=_KC}}, State) ->
     %% ?D_F("Unhandled key: ~p~n", [_KC]),
     {noreply, State}.
@@ -185,15 +196,15 @@ channels(mono) ->
 channels(stereo) ->
     2.
 
-make_lists(#state{last=Last, base=Base, mode=Mode} = State) ->
+make_lists(#state{capture=Cap, last=Last, base=Base, mode=Mode} = State) ->
     case rec:data(Last) of
 	Last ->
 	    State;
 	{New, Channels} ->
-	    C = channels(?CAPTURE),
+	    C = channels(Cap),
 	    gl:deleteLists(Base, C),
 	    NewBase = gl:genLists(C),
-	    make_lists2(?CAPTURE, Mode, NewBase, Channels),
+	    make_lists2(Cap, Mode, NewBase, Channels),
 	    State#state{last=New, base=NewBase}
     end.
 
