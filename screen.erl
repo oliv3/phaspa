@@ -27,21 +27,22 @@
 
 
 %% GL widget state
--record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV,
-		frame, gl, mouse,
-		%% scaling
-		scale=1.5,
-		%% drawing mode
-		mode=?GL_POINTS,
-		%% display-list stuff
-		last, base=0}).
+-record(state, {
+	  size,
+	  rot = ?DEFAULT_ROT,
+	  fov = ?DEFAULT_FOV,
+
+	  frame, gl, mouse,
+
+	  %% scaling
+	  scale=1.5,
+
+	  %% drawing mode
+	  mode=?GL_POINTS
+	 }).
 
 -define(ZMAX, 1000.0).
 -define(SCALE_STEP, 0.2).
-
--define(MONO,  0).
--define(LEFT,  1).
--define(RIGHT, 2).
 
 -define(O, 1.0).
 -define(Z, 0.0).
@@ -54,17 +55,14 @@ draw() ->
     wx_object:call(?SERVER, draw).
 
 handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV,
-				gl=GL, scale=Scale, base=Base} = State) ->
+				gl=GL, scale=Scale} = State) ->
     wxGLCanvas:setCurrent(GL),
     set_view(Size, Rot, FOV),
     wirecube:draw(),
     gl:scalef(Scale, Scale, Scale),
-    NewState = make_lists(State),
-
-    gl:callList(Base+?MONO),
-
+    draw_cb(State),
     wxGLCanvas:swapBuffers(GL),
-    {reply, ok, NewState}.
+    {reply, ok, State}.
 
 new(Frame, Size) ->
     wx_object:start_link(?MODULE, [Frame, Size], []).
@@ -140,7 +138,7 @@ handle_event(#wx{event=#wxKey{keyCode=$M}}, #state{mode=Mode} = State) ->
 		  ?GL_LINE_STRIP ->
 		      ?GL_POINTS
 	      end,
-    {noreply, State#state{last=make_ref(), mode=NewMode}};
+    {noreply, State#state{mode=NewMode}};
 handle_event(#wx{event=#wxKey{keyCode=_KC}}, State) ->
     %% ?D_F("Unhandled key: ~p~n", [_KC]),
     {noreply, State}.
@@ -177,34 +175,28 @@ set_view({Width, Height}, Rot, FOV) ->
     gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT).
 
 
-make_lists(#state{last=Last, base=Base, mode=Mode} = State) ->
-    case rec:data(Last) of
-	Last ->
-	    State;
-	{New, Channels} ->
-	    C = 1, %% We're in mono
-	    gl:deleteLists(Base, C),
-	    NewBase = gl:genLists(C),
-	    make_lists2(Mode, NewBase, Channels),
-	    State#state{last=New, base=NewBase}
-    end.
+draw_cb(#state{mode=Mode}) ->
+    %% FIXME remove from rec. case rec:data(Last) of
+    %% FIXME what is "Channels" now ?
+    %% FIXME remove _New
+    {_New, Channels} = rec:data(undefined),
+    draw_cb2(Mode, Channels).
 
 
-make_lists2(Mode, Base, Mono) ->
+draw_cb2(Mode, Mono) ->
     Mono1 = takens:embed3(Mono),
     Mono2 = spline:spline(?SPAN, Mono1),
-    make_list3(Mode, Base+?MONO, Mono2, ?MONO_C).
+    draw_cb3(Mode, Mono2, ?MONO_C).
 
 
-make_list3(Mode, List, Points, Color) ->
-    gl:newList(List, ?GL_COMPILE),
+draw_cb3(Mode, Points, Color) ->
     gl:pointSize(?PSIZE),
     gl:'begin'(Mode),
     add_points(Points, Color),
-    gl:'end'(),
-    gl:endList().
+    gl:'end'().
 
 
+%% TODO a list comprehension
 add_points([], _Color) ->
     ok;
 add_points([Point | Points], Color) ->
