@@ -192,14 +192,10 @@ draw_cb2(Mode, Mono) ->
 draw_cb3(Mode, Points, Color) ->
     gl:pointSize(?PSIZE),
     gl:'begin'(Mode),
-    add_points(Points, Color),
+    [add_point(Point, Color) || Point <- Points],
     gl:'end'().
 
 
-%% TODO a list comprehension
-add_points([], _Color) ->
-    ok;
-add_points([Point | Points], Color) ->
+add_point(Point, Color) ->
     gl:color3fv(Color),
-    gl:vertex3fv(Point),
-    add_points(Points, Color).
+    gl:vertex3fv(Point).
