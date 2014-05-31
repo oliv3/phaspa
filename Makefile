@@ -8,7 +8,7 @@ run:
 	erl -noshell -s gui
 
 # ---- Erlang
-ERLC_FLAGS = +debug_info +native
+ERLC_FLAGS = +debug_info +native +inline_list_funcs +inline
 
 %.beam: %.erl
 	erlc $(ERLC_FLAGS) $< -o $@
