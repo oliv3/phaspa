@@ -191,14 +191,14 @@ set_view({Width, Height}, Rot, FOV) ->
 
 draw_cb(State) ->
     %% FIXME remove from rec. case rec:data(Last) of
-    %% FIXME what is "Channels" now ?
     %% FIXME remove _New
-    {_New, Channels} = rec:data(undefined),
-    draw_cb2(Channels, State).
+    {_New, Samples} = rec:data(undefined),
+    %% io:format("~p samples~n", [length(Samples)]),
+    draw_cb2(Samples, State).
 
 
-draw_cb2(Mono, #state{mode=Mode, spline=Spline, color=Color}) ->
-    Mono1 = embed3(Mono),
+draw_cb2(Samples, #state{mode=Mode, spline=Spline, color=Color}) ->
+    Mono1 = embed3(Samples),
     Mono2 = case Spline of
 		true ->
 		    spline:spline(?SPAN, Mono1);
