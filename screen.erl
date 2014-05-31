@@ -35,12 +35,12 @@
 	  frame, gl, mouse,
 
 	  %% scaling
-	  scale=1.5,
+	  scale = 1.5,
 
 	  %% drawing mode
-	  mode=?GL_POINTS,
-
-	  spline = false
+	  mode = ?GL_LINE_STRIP,
+	  color = true,
+	  spline = true
 	 }).
 
 -define(ZMAX, 1000.0).
@@ -152,6 +152,11 @@ handle_event(#wx{event=#wxKey{keyCode=$S}}, #state{spline = false} = State) ->
 handle_event(#wx{event=#wxKey{keyCode=$S}}, #state{spline = true} = State) ->
     {noreply, State#state{spline = false}};
 
+handle_event(#wx{event=#wxKey{keyCode=$C}}, #state{color = false} = State) ->
+    {noreply, State#state{color = true}};
+handle_event(#wx{event=#wxKey{keyCode=$C}}, #state{color = true} = State) ->
+    {noreply, State#state{color = false}};
+
 handle_event(#wx{event=#wxKey{keyCode=_KC}}, State) ->
     %% ?D_F("Unhandled key: ~p~n", [_KC]),
     {noreply, State}.
@@ -188,15 +193,15 @@ set_view({Width, Height}, Rot, FOV) ->
     gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT).
 
 
-draw_cb(#state{mode=Mode, spline=Spline}) ->
+draw_cb(State) ->
     %% FIXME remove from rec. case rec:data(Last) of
     %% FIXME what is "Channels" now ?
     %% FIXME remove _New
     {_New, Channels} = rec:data(undefined),
-    draw_cb2(Mode, Channels, Spline).
+    draw_cb2(Channels, State).
 
 
-draw_cb2(Mode, Mono, Spline) ->
+draw_cb2(Mono, #state{mode=Mode, spline=Spline, color=Color}) ->
     Mono1 = embed3(Mono),
     Mono2 = case Spline of
 		true ->
@@ -204,19 +209,37 @@ draw_cb2(Mode, Mono, Spline) ->
 		false ->
 		    Mono1
 	    end,
-    draw_cb3(Mode, Mono2, ?MONO_C).
-
-
-draw_cb3(Mode, Points, Color) ->
-    gl:pointSize(?PSIZE),
     gl:'begin'(Mode),
-    [add_point(Point, Color) || Point <- Points],
+    gl:pointSize(?PSIZE),
+    case Color of
+	false ->
+	    draw_cb3(Mono2, ?MONO_C);
+	true ->
+	    draw_cb3(Mono2, Mono2)
+    end,
     gl:'end'().
+
+
+draw_cb3([Point | Points], [Color | Colors]) ->
+    add_point(Point, color(Color)),
+    draw_cb3(Points, Colors);
+draw_cb3([], []) ->
+    ok;
+draw_cb3(Points, Color) ->
+    [add_point(Point, Color) || Point <- Points].
 
 
 add_point(Point, Color) ->
     gl:color3fv(Color),
     gl:vertex3fv(Point).
+
+
+color({R, G, B}) ->
+    {rescale(R), rescale(G), rescale(B)}.
+
+%% Val in [-1..+1] -> [0..1]
+rescale(Val) ->
+    (Val + 1.0) / 2.0 + 0.1.
 
 
 %% Takens embedding (dim=3, delay=1)
