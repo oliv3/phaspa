@@ -146,6 +146,12 @@ handle_event(#wx{event=#wxKey{keyCode=$M}}, #state{mode=Mode} = State) ->
 		      ?GL_POINTS
 	      end,
     {noreply, State#state{mode=NewMode}};
+
+handle_event(#wx{event=#wxKey{keyCode=$S}}, #state{spline = false} = State) ->
+    {noreply, State#state{spline = true}};
+handle_event(#wx{event=#wxKey{keyCode=$S}}, #state{spline = true} = State) ->
+    {noreply, State#state{spline = false}};
+
 handle_event(#wx{event=#wxKey{keyCode=_KC}}, State) ->
     %% ?D_F("Unhandled key: ~p~n", [_KC]),
     {noreply, State}.
