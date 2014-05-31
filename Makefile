@@ -5,7 +5,7 @@ erlang:
 c: rec spline
 
 run:
-	erl -noshell -s gui
+	erl -noshell -s gui -s init stop
 
 # ---- Erlang
 ERLC_FLAGS = +debug_info +native +inline_list_funcs +inline
