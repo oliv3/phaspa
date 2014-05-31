@@ -9,9 +9,9 @@
 -define(D_TERMINATE(Reason),
 	case is_list(Reason) of
 	    true ->
-		?D_LOG("~p ~s: terminating with reason: ~s", [self(), ?MODULE, Reason]);
+		?D_LOG("~p ~s: terminating with reason: ~s~n", [self(), ?MODULE, Reason]);
 	    false ->
-		?D_LOG("~p ~s: terminating with reason: ~p", [self(), ?MODULE, Reason])
+		?D_LOG("~p ~s: terminating with reason: ~p~n", [self(), ?MODULE, Reason])
 	end).
 -define(D_F(Format, Args),
 	?D_LOG("~p ~s: " ++ Format, [self(), ?MODULE] ++ Args)).
