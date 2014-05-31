@@ -53,11 +53,7 @@
 -define(ZMAX, 1000.0).
 -define(SCALE_STEP, 0.2).
 
--define(O, 1.0).
--define(Z, 0.0).
--define(MONO_C,  {?O, ?O, ?O}).
--define(LEFT_C,  {?Z, ?Z, ?O}).
--define(RIGHT_C, {?O, ?Z, ?Z}).
+-define(MONO_C, {1.0, 1.0, 1.0}).
 
 
 draw() ->
@@ -201,9 +197,6 @@ set_view({Width, Height}, Rot, FOV) ->
 
 
 draw_cb(#state{last=Last, buffers = Buffers} = State) ->
-    %% FIXME remove from rec. case rec:data(Last) of
-    %% FIXME what is "Channels" now ?
-    %% FIXME remove _New
     case rec:data(Last) of
 	Last ->
 	    %% io:format("No change~n"),
@@ -218,18 +211,16 @@ draw_cb(#state{last=Last, buffers = Buffers} = State) ->
     end.
 
 
-draw_cb2(Mono, #state{mode=Mode, spline=Spline, color=Color}) ->
-    %% io:format("Mono:  ~p~n", [Mono]),
-    Mono1 = embed3(Mono),
-    %% io:format("Mono1: ~p~n", [Mono1]),
+draw_cb2(Samples, #state{mode=Mode, spline=Spline, color=Color}) ->
+    Mono1 = embed3(Samples),
     Mono2 = case Spline of
 		true ->
 		    spline:spline(?SPAN, Mono1);
 		false ->
 		    Mono1
 	    end,
-    gl:'begin'(Mode),
     gl:pointSize(?PSIZE),
+    gl:'begin'(Mode),
     case Color of
 	false ->
 	    draw_cb3(Mono2, ?MONO_C);
