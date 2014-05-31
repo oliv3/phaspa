@@ -184,7 +184,7 @@ draw_cb(#state{mode=Mode}) ->
 
 
 draw_cb2(Mode, Mono) ->
-    Mono1 = takens:embed3(Mono),
+    Mono1 = embed3(Mono),
     Mono2 = spline:spline(?SPAN, Mono1),
     draw_cb3(Mode, Mono2, ?MONO_C).
 
@@ -199,3 +199,14 @@ draw_cb3(Mode, Points, Color) ->
 add_point(Point, Color) ->
     gl:color3fv(Color),
     gl:vertex3fv(Point).
+
+
+%% Takens embedding (dim=3, delay=1)
+embed3(List) when is_list(List) ->
+    embed3(List, []).
+
+embed3([X,Y,Z|Tail], Acc) ->
+    Point = {X,Y,Z},
+    embed3([Y,Z|Tail], [Point|Acc]);
+embed3(_Rest, Acc) ->
+    Acc.
