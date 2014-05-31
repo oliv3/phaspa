@@ -30,7 +30,7 @@ start() ->
     rec:stop(),
     rec:destroy(),
     spline:destroy(),
-    recorder:destroy(),
+    %% recorder:destroy(),
     wx:destroy().
 
 
