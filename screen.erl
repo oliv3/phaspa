@@ -38,7 +38,9 @@
 	  scale=1.5,
 
 	  %% drawing mode
-	  mode=?GL_POINTS
+	  mode=?GL_POINTS,
+
+	  spline = false
 	 }).
 
 -define(ZMAX, 1000.0).
@@ -180,17 +182,22 @@ set_view({Width, Height}, Rot, FOV) ->
     gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT).
 
 
-draw_cb(#state{mode=Mode}) ->
+draw_cb(#state{mode=Mode, spline=Spline}) ->
     %% FIXME remove from rec. case rec:data(Last) of
     %% FIXME what is "Channels" now ?
     %% FIXME remove _New
     {_New, Channels} = rec:data(undefined),
-    draw_cb2(Mode, Channels).
+    draw_cb2(Mode, Channels, Spline).
 
 
-draw_cb2(Mode, Mono) ->
+draw_cb2(Mode, Mono, Spline) ->
     Mono1 = embed3(Mono),
-    Mono2 = spline:spline(?SPAN, Mono1),
+    Mono2 = case Spline of
+		true ->
+		    spline:spline(?SPAN, Mono1);
+		false ->
+		    Mono1
+	    end,
     draw_cb3(Mode, Mono2, ?MONO_C).
 
 
