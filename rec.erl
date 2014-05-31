@@ -16,8 +16,6 @@
 
 -export([phase/1, antiphase/1]).
 
-%% -define(SPAN, 5).
-
 %% DEBUG
 -export([data/0]).
 
@@ -37,10 +35,10 @@ new() ->
 	    ok
     end.
 
+
 boot(Parent) ->
     %% TODO use code:priv_dir() later
     Cmd = "./rec",
-    %% Port = open_port({spawn_executable, Cmd}, [{packet, 4}, in, out, binary]),
     Port = open_port({spawn_executable, Cmd}, [{packet, 4}, binary]),
     register(?SERVER, self()),
     Parent ! started,
@@ -73,12 +71,6 @@ destroy() ->
 
 
 loop(#state{port=Port, last=Last, data=Data} = State) ->
-    %% receive
-    %% 	{Port, {data, Data}} ->
-    %% 	    %% ?D_F("Got data: ~p~n", [Data]),
-    %% 	    loop(State#state{last=make_ref(), data=binary_to_term(Data)})
-
-    %% after 0 ->
     receive
 	{Pid, Ref, data} ->
 	    Pid ! {Ref, Data},
@@ -114,9 +106,6 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
 
 	    NewData = {Mono, left(Samples), right(Samples)},
 
-	    %% NewData = process(RawData1, []),
-	    %% NewData = process_rgb(RawData1, [], []),
-
 	    loop(State#state{last=make_ref(), data=NewData});
 
 	_Other ->
@@ -149,42 +138,6 @@ port_command_wrapper2(Port, Pid, Ref, Expected) ->
 		    port_command_wrapper2(Port, Pid, Ref, Expected)
 	    end
     end.
-
-
-%% 3D Takens embedding
-%% process([X,Y,Z|Tail], Acc) ->
-%%     Point = {X,Y,Z},
-%%     process([Y,Z|Tail], [Point|Acc]);
-%% process(_Rest, Acc) ->
-%%     Acc1 = spline:spline(?SPAN, Acc),
-%%     process2(Acc1).
-
-%% process2(Points) ->
-%%     [#point3d{x=X, y=Y, z=Z} || {X,Y,Z} <- Points].
-
-%% %% 6D (3+3) Takens embedding
-%% process_rgb([X,Y,Z,R,G,B|Tail], AccP, AccC) ->
-%%     Point = {X,Y,Z},
-%%     Color = {to_rgb(R), to_rgb(G), to_rgb(B)},
-%%     process_rgb([Y,Z,R,G,B|Tail], [Point|AccP], [Color|AccC]);
-%% process_rgb(_Rest, AccP, AccC) ->
-%%     AccP1 = spline:spline(?SPAN, AccP),
-%%     AccC1 = spline:spline(?SPAN, AccC),
-%%     process_rgb2(AccP1, AccC1).
-
-%% process_rgb2(Points, Colors) ->
-%%     process_rgb2(Points, Colors, []).
-%% process_rgb2([], [], Acc) ->
-%%     %% io:format("Points6D= ~p~n", [Acc]),
-%%     Acc;
-%% process_rgb2([{X,Y,Z}|Points], [{R,G,B}|Colors], Acc) ->
-%%     P3D = #point3d{x=X, y=Y, z=Z, r=R, g=G, b=B},
-%%     process_rgb2(Points, Colors, [P3D|Acc]).
-
-
-%% to_rgb(Val) ->
-%%     Tmp = (Val+1)/2,
-%%     255*Tmp.
 
 
 %% phase/antiphase mean
