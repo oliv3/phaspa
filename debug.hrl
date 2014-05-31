@@ -16,7 +16,7 @@
 -define(D_F(Format, Args),
 	?D_LOG("~p ~s: " ++ Format, [self(), ?MODULE] ++ Args)).
 -define(D_REGISTER(Alias, Pid),
-	?D_LOG("~p ~s: registering ~p as ~p", [self(), ?MODULE, Pid, Alias]),
+	?D_LOG("~p ~s: registering ~p as ~p~n", [self(), ?MODULE, Pid, Alias]),
 	register(Alias, Pid)).
 -define(D_UNHANDLED(Msg),
         error_logger:error_msg("~p ~s: unhandled message: ~p", [self(), ?MODULE, Msg])).
