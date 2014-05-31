@@ -14,8 +14,6 @@
 -export([record/1, stop/0]).
 -export([data/1]).
 
--export([phase/1, antiphase/1]).
-
 %% DEBUG
 -export([data/0]).
 
@@ -24,7 +22,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {port, last=make_ref(), data={[], [], []}}).
+-record(state, {port, last=make_ref(), data=[]}).
 
 
 new() ->
@@ -100,13 +98,7 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
 
 	{Port, {data, PortData}} ->
 	    Samples = binary_to_term(PortData),
-
-	    Mono = mono(Samples, fun phase/1),
-	    %% Mono = mono(Samples, fun antiphase/1),
-
-	    NewData = {Mono, left(Samples), right(Samples)},
-
-	    loop(State#state{last=make_ref(), data=NewData});
+	    loop(State#state{last=make_ref(), data=Samples});
 
 	_Other ->
 	    ?D_UNHANDLED(_Other)
@@ -138,20 +130,3 @@ port_command_wrapper2(Port, Pid, Ref, Expected) ->
 		    port_command_wrapper2(Port, Pid, Ref, Expected)
 	    end
     end.
-
-
-%% phase/antiphase mean
-phase({Left, Right}) ->
-    (Left+Right)/2.
-antiphase({Left, Right}) ->
-    (Left-Right)/2.
-
-
-mono(Data, F) ->
-    [F(Sample) || Sample <- Data].
-
-left(Samples) ->
-    [L || {L, _R} <- Samples].
-
-right(Samples) ->
-    [R || {_L, R} <- Samples].
