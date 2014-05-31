@@ -205,8 +205,8 @@ draw_cb2(Mono, #state{mode=Mode, spline=Spline, color=Color}) ->
 		false ->
 		    Mono1
 	    end,
-    gl:'begin'(Mode),
     gl:pointSize(?PSIZE),
+    gl:'begin'(Mode),
     case Color of
 	false ->
 	    draw_cb3(Mono2, ?MONO_C);
