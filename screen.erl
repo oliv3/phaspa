@@ -46,11 +46,7 @@
 -define(ZMAX, 1000.0).
 -define(SCALE_STEP, 0.2).
 
--define(O, 1.0).
--define(Z, 0.0).
--define(MONO_C,  {?O, ?O, ?O}).
--define(LEFT_C,  {?Z, ?Z, ?O}).
--define(RIGHT_C, {?O, ?Z, ?Z}).
+-define(MONO_C, {1.0, 1.0, 1.0}).
 
 
 draw() ->
