@@ -45,7 +45,7 @@ loop() ->
 	    loop();
 
 	{'EXIT', Pid, Reason} ->
-	    ?D_F("got EXIT from ~p with reason: ~p", [Pid, Reason]);
+	    ?D_F("got EXIT from ~p with reason: ~p~n", [Pid, Reason]);
 
 	_Other ->
 	    ?D_UNHANDLED(_Other),
