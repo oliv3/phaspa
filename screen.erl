@@ -200,15 +200,19 @@ draw_cb(#state{last=Last, buffers = Buffers} = State) ->
     case rec:data(Last) of
 	Last ->
 	    %% io:format("No change~n"),
-	    [draw_cb2(Buffer, State) || Buffer <- Buffers],
+	    draw_buffers(Buffers, State),
 	    State;
 
 	{New, Samples} ->
 	    %% io:format("New samples~n"),
 	    NewBuffers = add_buffer(Samples, Buffers),
-	    [draw_cb2(Buffer, State) || Buffer <- NewBuffers],
+	    draw_buffers(NewBuffers, State),
 	    State#state{last = New, buffers = NewBuffers}
     end.
+
+
+draw_buffers(Buffers, State) ->
+    [draw_cb2(Buffer, State) || Buffer <- Buffers].
 
 
 draw_cb2(Samples, #state{mode=Mode, spline=Spline, color=Color}) ->
