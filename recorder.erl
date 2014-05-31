@@ -4,15 +4,11 @@
 -include_lib("wx/include/wx.hrl").
 
 -include("debug.hrl").
-%% -include("point3d.hrl").
 
 -behaviour(wx_object).
 
-%% module API
-%% -export([load/1, data/1]).
-
 %% wx_object API
--export([new/1]). %% start_link/1]).
+-export([new/1]).
 -export([destroy/0]).
 
 %% wx_object callbacks
@@ -21,10 +17,6 @@
 -export([handle_event/2, terminate/2]). %%, code_change/3]).
 
 -define(SERVER, ?MODULE). 
-
-%% %% GUI macros
-%% -define(QUIT,   ?wxID_EXIT).
-%% -define(ABOUT,  ?wxID_ABOUT).
 
 -record(state, {frame}).
 
@@ -64,9 +56,6 @@ create_window(Wx, Size) ->
 destroy() ->
     wx_object:cast(?SERVER, destroy).
 
-%% handle_event
-%%handle_event(#wx{event = #wxFileDirPicker{type = command_filepicker_changed,
-%%                                          path = Path}}, #state{last=Last, data=Data} = State) ->
 handle_event(#wx{event=#wxSpin{type=command_spinctrl_updated, commandInt=Value}}, State) ->
     ?D_F("Spinctrl value: ~p~n", [Value]),
     rec:stop(),

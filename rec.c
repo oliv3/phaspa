@@ -10,7 +10,7 @@
 
 /* TODO: pass INSIZE it as an option to start */
 #define INSIZE	   256
-#define CHANNELS   2
+#define CHANNELS   1
 #define NSAMPLES   (INSIZE*CHANNELS)
 #define ABUFF_SIZE NSAMPLES * sizeof(float)
 
@@ -124,11 +124,10 @@ record(void *args) {
       check(ei_x_encode_list_header(&result, INSIZE));
 
       /* List elements */
-      for (i = 0; i < NSAMPLES; i+=2) {
-	check(ei_x_encode_tuple_header(&result, 2));
+      for (i = 0; i < NSAMPLES; i++)
 	check(ei_x_encode_double(&result, pa_buff[i]));
-	check(ei_x_encode_double(&result, pa_buff[i+1]));
-      }
+
+      /* Make a proper list */
       check(ei_x_encode_empty_list(&result));
 
       // D("%s", "Sending data");

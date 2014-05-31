@@ -24,15 +24,13 @@
 -define(SERVER,  ?MODULE).
 -define(PSIZE,   1.5).
 -define(SPAN,    5).
--define(CAPTURE, stereo). %% | stereo.
+
 
 %% GL widget state
 -record(state, {size, rot=?DEFAULT_ROT, fov=?DEFAULT_FOV,
 		frame, gl, mouse,
 		%% scaling
 		scale=1.5,
-		%% capture mode
-		capture=mono,
 		%% drawing mode
 		mode=?GL_POINTS,
 		%% display-list stuff
@@ -55,21 +53,16 @@
 draw() ->
     wx_object:call(?SERVER, draw).
 
-handle_call(draw, _From, #state{capture=Cap, size=Size, rot=Rot, fov=FOV,
+handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV,
 				gl=GL, scale=Scale, base=Base} = State) ->
     wxGLCanvas:setCurrent(GL),
     set_view(Size, Rot, FOV),
     wirecube:draw(),
     gl:scalef(Scale, Scale, Scale),
     NewState = make_lists(State),
-    case Cap of
-	mono ->
-	    gl:callList(Base+?MONO);
 
-	stereo ->
-	    gl:callList(Base+?LEFT),
-	    gl:callList(Base+?RIGHT)
-    end,
+    gl:callList(Base+?MONO),
+
     wxGLCanvas:swapBuffers(GL),
     {reply, ok, NewState}.
 
@@ -148,14 +141,6 @@ handle_event(#wx{event=#wxKey{keyCode=$M}}, #state{mode=Mode} = State) ->
 		      ?GL_POINTS
 	      end,
     {noreply, State#state{last=make_ref(), mode=NewMode}};
-handle_event(#wx{event=#wxKey{keyCode=$C}}, #state{capture=Cap} = State) ->
-    NewCap = case Cap of
-		 mono ->
-		     stereo;
-		 stereo ->
-		     mono
-	     end,
-    {noreply, State#state{last=make_ref(), capture=NewCap}};
 handle_event(#wx{event=#wxKey{keyCode=_KC}}, State) ->
     %% ?D_F("Unhandled key: ~p~n", [_KC]),
     {noreply, State}.
@@ -191,58 +176,38 @@ set_view({Width, Height}, Rot, FOV) ->
 
     gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT).
 
-channels(mono) ->
-    1;
-channels(stereo) ->
-    2.
 
-make_lists(#state{capture=Cap, last=Last, base=Base, mode=Mode} = State) ->
+make_lists(#state{last=Last, base=Base, mode=Mode} = State) ->
     case rec:data(Last) of
 	Last ->
 	    State;
 	{New, Channels} ->
-	    C = channels(Cap),
+	    C = 1, %% We're in mono
 	    gl:deleteLists(Base, C),
 	    NewBase = gl:genLists(C),
-	    make_lists2(Cap, Mode, NewBase, Channels),
+	    make_lists2(Mode, NewBase, Channels),
 	    State#state{last=New, base=NewBase}
     end.
 
 
-make_lists2(mono, Mode, Base, {Mono, _Left, _Right}) ->
+make_lists2(Mode, Base, Mono) ->
     Mono1 = takens:embed3(Mono),
     Mono2 = spline:spline(?SPAN, Mono1),
-    make_list3(Mode, Base+?MONO, Mono2, ?MONO_C);
-make_lists2(stereo, Mode, Base, {_Mono, Left, Right}) ->
-    Left1 = takens:embed3(Left),
-    Left2 = spline:spline(?SPAN, Left1),
-    make_list3(Mode, Base+?LEFT, Left2, ?LEFT_C),
-
-    Right1 = takens:embed3(Right),
-    Right2 = spline:spline(?SPAN, Right1),
-    make_list3(Mode, Base+?RIGHT, Right2, ?RIGHT_C).
+    make_list3(Mode, Base+?MONO, Mono2, ?MONO_C).
 
 
 make_list3(Mode, List, Points, Color) ->
     gl:newList(List, ?GL_COMPILE),
     gl:pointSize(?PSIZE),
-    %% prepare_gl(),
     gl:'begin'(Mode),
     add_points(Points, Color),
     gl:'end'(),
     gl:endList().
 
 
-prepare_gl() ->
-    gl:enable(?GL_POINT_SMOOTH),
-    gl:disable(?GL_BLEND),
-    gl:enable(?GL_ALPHA_TEST),
-    gl:alphaFunc(?GL_GREATER, 0.5).
-
-
 add_points([], _Color) ->
     ok;
-add_points([Point|Points], Color) ->
+add_points([Point | Points], Color) ->
     gl:color3fv(Color),
     gl:vertex3fv(Point),
     add_points(Points, Color).

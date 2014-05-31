@@ -21,7 +21,7 @@ start() ->
     Wx = wx:new(),
     win:new(Wx),
     spline:new(),
-    recorder:new(Wx),
+    %% recorder:new(Wx),
     rec:new(),
     rec:record(8000),
     ?D_REGISTER(?SERVER, self()),
@@ -30,7 +30,7 @@ start() ->
     rec:stop(),
     rec:destroy(),
     spline:destroy(),
-    recorder:destroy(),
+    %% recorder:destroy(),
     wx:destroy().
 
 
