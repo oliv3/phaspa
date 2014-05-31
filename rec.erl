@@ -109,8 +109,8 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
 	{Port, {data, PortData}} ->
 	    Samples = binary_to_term(PortData),
 
-	    %% Mono = mono(Samples, fun phase/1),
-	    Mono = mono(Samples, fun antiphase/1),
+	    Mono = mono(Samples, fun phase/1),
+	    %% Mono = mono(Samples, fun antiphase/1),
 
 	    NewData = {Mono, left(Samples), right(Samples)},
 
