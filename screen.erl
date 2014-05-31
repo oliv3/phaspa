@@ -123,8 +123,13 @@ handle_event(#wx{event=#wxMouse{type=enter_window}}, State) ->
 %%     wxTopLevelWindow:showFullScreen(Frame, New),
 %%     {noreply, State};
 
+handle_event(#wx{event=#wxKey{keyCode=$ }}, State) ->
+    rec:switch(),
+    {noreply, State};
+
 %% +/-: Change shape scale
 %% +
+%% XXXX macros MOUSE WHEEL
 handle_event(#wx{event=#wxKey{keyCode=61}}, #state{scale=Scale} = State) ->
     {noreply, State#state{scale=Scale+?SCALE_STEP}};
 %% -

@@ -13,6 +13,7 @@
 -export([new/0, destroy/0]).
 -export([record/1, stop/0]).
 -export([data/1]).
+-export([switch/0]).
 
 %% DEBUG
 -export([data/0]).
@@ -22,7 +23,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {port, last=make_ref(), data=[]}).
+-record(state, {port, last=make_ref(), data=[], paused = false}).
 
 
 new() ->
@@ -67,8 +68,11 @@ data(Last) ->
 destroy() ->
     do(destroy).
 
+switch() ->
+    do(switch).
 
-loop(#state{port=Port, last=Last, data=Data} = State) ->
+
+loop(#state{port=Port, last=Last, data=Data, paused=Paused} = State) ->
     receive
 	{Pid, Ref, data} ->
 	    Pid ! {Ref, Data},
@@ -88,6 +92,14 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
 	    port_close(Port),
 	    Pid ! {Ref, ok};
 
+	{Pid, Ref, switch} when Paused =:= false ->
+	    Pid ! {Ref, ok},
+	    loop(State#state{paused = true});
+
+	{Pid, Ref, switch} when Paused =:= true ->
+	    Pid ! {Ref, ok},
+	    loop(State#state{paused = false});
+
 	{Pid, Ref, {record, _Freq} = Cmd} ->
 	    port_command_wrapper(Port, Pid, Ref, Cmd),
 	    loop(State);
@@ -96,9 +108,12 @@ loop(#state{port=Port, last=Last, data=Data} = State) ->
 	    port_command_wrapper(Port, Pid, Ref, Cmd, ok),
 	    loop(State);
 
-	{Port, {data, PortData}} ->
+	{Port, {data, PortData}} when Paused =:= false ->
 	    Samples = binary_to_term(PortData),
 	    loop(State#state{last=make_ref(), data=Samples});
+
+	{Port, {data, _PortData}} when Paused =:= true ->
+	    loop(State);
 
 	_Other ->
 	    ?D_UNHANDLED(_Other)
