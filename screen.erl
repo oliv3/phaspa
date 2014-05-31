@@ -24,6 +24,7 @@
 -define(SERVER,  ?MODULE).
 -define(PSIZE,   1.5).
 -define(SPAN,    5).
+-define(BUFFERS, 5).
 
 
 %% GL widget state
@@ -40,7 +41,13 @@
 	  %% drawing mode
 	  mode = ?GL_LINE_STRIP,
 	  color = true,
-	  spline = true
+	  spline = true,
+
+	  %% recorder sync
+	  last,
+
+	  %% samples buffer
+	  buffers = []
 	 }).
 
 -define(ZMAX, 1000.0).
@@ -62,9 +69,9 @@ handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV,
     set_view(Size, Rot, FOV),
     wirecube:draw(),
     gl:scalef(Scale, Scale, Scale),
-    draw_cb(State),
+    NewState = draw_cb(State),
     wxGLCanvas:swapBuffers(GL),
-    {reply, ok, State}.
+    {reply, ok, NewState}.
 
 new(Frame, Size) ->
     wx_object:start_link(?MODULE, [Frame, Size], []).
@@ -193,16 +200,28 @@ set_view({Width, Height}, Rot, FOV) ->
     gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT).
 
 
-draw_cb(State) ->
+draw_cb(#state{last=Last, buffers = Buffers} = State) ->
     %% FIXME remove from rec. case rec:data(Last) of
     %% FIXME what is "Channels" now ?
     %% FIXME remove _New
-    {_New, Channels} = rec:data(undefined),
-    draw_cb2(Channels, State).
+    case rec:data(Last) of
+	Last ->
+	    %% io:format("No change~n"),
+	    [draw_cb2(Buffer, State) || Buffer <- Buffers],
+	    State;
+
+	{New, Samples} ->
+	    %% io:format("New samples~n"),
+	    NewBuffers = add_buffer(Samples, Buffers),
+	    [draw_cb2(Buffer, State) || Buffer <- NewBuffers],
+	    State#state{last = New, buffers = NewBuffers}
+    end.
 
 
 draw_cb2(Mono, #state{mode=Mode, spline=Spline, color=Color}) ->
+    %% io:format("Mono:  ~p~n", [Mono]),
     Mono1 = embed3(Mono),
+    %% io:format("Mono1: ~p~n", [Mono1]),
     Mono2 = case Spline of
 		true ->
 		    spline:spline(?SPAN, Mono1);
@@ -243,11 +262,20 @@ rescale(Val) ->
 
 
 %% Takens embedding (dim=3, delay=1)
-embed3(List) when is_list(List) ->
-    embed3(List, []).
+embed3(List) ->
+    %% io:format("embed3(~p)~n", [List]),
+    embed32(List, []).
 
-embed3([X,Y,Z|Tail], Acc) ->
+embed32([X,Y,Z|Tail], Acc) ->
     Point = {X,Y,Z},
-    embed3([Y,Z|Tail], [Point|Acc]);
-embed3(_Rest, Acc) ->
+    embed32([Y,Z|Tail], [Point|Acc]);
+embed32(_Rest, Acc) ->
     Acc.
+
+
+add_buffer(Samples, Buffers) when length(Buffers) < ?BUFFERS ->
+    [Samples | Buffers];
+add_buffer(Samples, Buffers) ->
+    [_Drop | Buffers1] = lists:reverse(Buffers),
+    Buffers2 = lists:reverse(Buffers1),
+    [Samples | Buffers2].
