@@ -23,7 +23,7 @@ start() ->
     spline:new(),
     %% recorder:new(Wx),
     rec:new(),
-    rec:record(8000),
+    rec:record(4410),
     ?D_REGISTER(?SERVER, self()),
     tick(?IFPS),
     loop(),
