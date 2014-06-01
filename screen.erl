@@ -8,7 +8,6 @@
 
 -include("gui.hrl").
 -include("debug.hrl").
--include("point3d.hrl").
 
 -behaviour(wx_object).
 

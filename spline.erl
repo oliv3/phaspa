@@ -7,7 +7,6 @@
 -author('olivier@biniou.info').
 
 -include("debug.hrl").
--include("point3d.hrl").
 
 %% Module API
 -export([new/0, destroy/0]).
