@@ -21,7 +21,7 @@
 -export([init/1, handle_call/3, handle_event/2, terminate/2]).
 
 -define(SERVER,  ?MODULE).
--define(PSIZE,   1.5).
+-define(SIZE,    1.5).
 -define(SPAN,    5).
 
 
@@ -79,7 +79,7 @@ init([Frame, Size]) ->
     wxFrame:connect(GL, enter_window),
     wxFrame:connect(GL, key_up),
 
-    ?D_REGISTER(?SERVER, self()), %% not needed ?
+    ?D_REGISTER(?SERVER, self()),
 
     {GL, #state{size=Size, frame=Frame, gl=GL}}.
 
@@ -204,7 +204,8 @@ draw_cb2(Samples, #state{mode=Mode, spline=Spline, color=Color}) ->
 		false ->
 		    Mono1
 	    end,
-    gl:pointSize(?PSIZE),
+    gl:pointSize(?SIZE),
+    gl:lineWidth(?SIZE),
     gl:'begin'(Mode),
     case Color of
 	false ->
