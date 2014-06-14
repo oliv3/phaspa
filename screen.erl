@@ -202,6 +202,8 @@ draw_cb(State) ->
     draw_cb2(Samples, State).
 
 
+draw_cb2([], _State) ->
+    ok;
 draw_cb2(Samples, #state{mode=Mode, spline=Spline, color=Color}) ->
     Mono1 = embed3(Samples),
     Mono2 = case Spline of
@@ -218,11 +220,16 @@ draw_cb2(Samples, #state{mode=Mode, spline=Spline, color=Color}) ->
 			make_particles(Mono2, ?WHITE)
 		end,
 
+    %% Draw particles
     gl:pointSize(?SIZE),
     gl:lineWidth(?SIZE),
     gl:'begin'(Mode),
     [draw_point(Tuple) || Tuple <- Particles],
-    gl:'end'().
+    gl:'end'(),
+
+    %% Add to the particle system
+    particle_system:create(Particles).
+
 
 
 make_particles(Points, Color) when is_tuple(Color) ->

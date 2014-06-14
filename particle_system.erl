@@ -10,6 +10,7 @@
 -export([stop/0]).
 
 -export([draw/0]).
+-export([create/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -24,6 +25,9 @@
 %%%===================================================================
 draw() ->
     gen_server:call(?SERVER, draw).
+
+create(Particles) ->
+    gen_server:cast(?SERVER, {create, Particles}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -98,6 +102,7 @@ handle_call(_Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_cast(_Msg, State) ->
+    %% io:format("unknown cast~n"),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
