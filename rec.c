@@ -6,13 +6,13 @@
 // #undef DEBUG
 #include "debug.h"
 
-#define BUF_SIZE 65535
+#define BUF_SIZE 256
 
 /* TODO: pass INSIZE it as an option to start */
 #define INSIZE	   512
 #define CHANNELS   1
 #define NSAMPLES   (INSIZE*CHANNELS)
-#define ABUFF_SIZE NSAMPLES * sizeof(float)
+#define ABUFF_SIZE (NSAMPLES * sizeof(float))
 
 static float pa_buff[NSAMPLES];
 static pa_simple *pa_s = NULL;
