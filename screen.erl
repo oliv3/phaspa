@@ -197,6 +197,7 @@ draw_cb(State) ->
     %% FIXME remove _New
     {_New, Samples} = rec:data(undefined),
     %% io:format("~p samples~n", [length(Samples)]),
+    display(Samples),
     draw_cb2(Samples, State).
 
 
@@ -251,3 +252,13 @@ embed3([X,Y,Z|Tail], Acc) ->
     embed3([Y,Z|Tail], [Point|Acc]);
 embed3(_Rest, Acc) ->
     Acc.
+
+
+display([]) ->
+    ok;
+display(Samples) ->
+    %% io:format("Got ~w samples~n", [length(Samples)]),
+    {S, _} = lists:split(10, Samples),
+    S1 = [trunc(V*100) || V <- S],
+    io:format("~p~n", [S1]),
+    ok.
