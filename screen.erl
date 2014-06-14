@@ -13,6 +13,7 @@
 
 %% API
 -export([draw/0]).
+-export([display/1]).
 
 %% wx_object API
 -export([new/2]).
@@ -197,7 +198,7 @@ draw_cb(State) ->
     %% FIXME remove _New
     {_New, Samples} = rec:data(undefined),
     %% io:format("~p samples~n", [length(Samples)]),
-    display(Samples),
+    %% display(Samples),
     draw_cb2(Samples, State).
 
 
