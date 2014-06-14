@@ -2,9 +2,14 @@
 
 -behaviour(gen_server).
 
+%% -include_lib("wx/include/wx.hrl"). 
+-include_lib("wx/include/gl.hrl"). 
+
 %% API
--export([start_link/0]).
+-export([start_link/2]).
 -export([stop/0]).
+
+-export([draw/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -17,6 +22,8 @@
 %%%===================================================================
 %%% API
 %%%===================================================================
+draw() ->
+    gen_server:call(?SERVER, draw).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -25,8 +32,8 @@
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(Env, GL) ->
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [Env, GL], []).
 
 
 stop() ->
@@ -47,8 +54,10 @@ stop() ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([]) ->
-    io:format("Starting particle system~n"),
+init([Env, GL]) ->
+    io:format("Starting particle system, Env= ~p~n", [Env]),
+    wx:set_env(Env),
+    wxGLCanvas:setCurrent(GL),
     {ok, #state{}}.
 
 %%--------------------------------------------------------------------
@@ -65,6 +74,10 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call(draw, _From, State) ->
+    Reply = draw_cb(),
+    {reply, Reply, State};
+
 handle_call(stop, _From, State) ->
     io:format("Stopping particle system~n"),
     Reply = ok,
@@ -98,6 +111,7 @@ handle_cast(_Msg, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_info(_Info, State) ->
+    io:format("~s: Unhandled info ~p~n", [?MODULE, _Info]),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -128,3 +142,8 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+draw_cb() ->
+    gl:pushMatrix(),
+    gl:scalef(1.1, 1.1, 1.1),
+    wirecube:draw({0.0, 0.0, 1.0}),
+    gl:popMatrix().

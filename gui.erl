@@ -20,20 +20,23 @@ start() ->
     process_flag(trap_exit, true),
     Wx = wx:new(),
     win:new(Wx),
-    particle_system:start_link(), %% TODO Wx, GL
+    particle_system:start_link(wx:get_env(), win:get_gl()),
     spline:new(),
     %% recorder:new(Wx),
     rec:new(),
     rec:record(4410),
     ?D_REGISTER(?SERVER, self()),
+
     tick(?IFPS),
     loop(),
+
+    particle_system:stop(),
     rec:stop(),
     rec:destroy(),
     spline:destroy(),
     %% recorder:destroy(),
-    particle_system:stop(),
-    wx:destroy().
+    wx:destroy(),
+    ok.
 
 
 %%====================================================================

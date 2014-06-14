@@ -25,23 +25,20 @@
 -define(E(X), gl:vertex3fv(element(X, ?CUBE))).
 
 
-set_model_view() ->
-    gl:matrixMode(?GL_MODELVIEW),
-    gl:loadIdentity().
-
-
 draw() ->
     draw({?ZERO, ?ONE/2, ?ZERO}).
 
 draw(Color) ->
-    set_model_view(),
-    gl:lineWidth(1.0),
-    gl:'begin'(?GL_LINES),
-    gl:color3fv(Color),
-    ?E(1), ?E(2), ?E(2), ?E(3), ?E(3), ?E(4),
-    ?E(4), ?E(5), ?E(5), ?E(8), ?E(8), ?E(3),
-    ?E(1), ?E(6), ?E(6), ?E(7), ?E(7), ?E(2),
-    ?E(6), ?E(5), ?E(5), ?E(8), ?E(8), ?E(7),
-    ?E(6), ?E(1), ?E(1), ?E(4), ?E(4), ?E(5),
-    ?E(7), ?E(2), ?E(3), ?E(8),
-    gl:'end'().
+    wx:batch(fun() ->
+		     %% set_model_view(),
+		     gl:lineWidth(1.0),
+		     gl:'begin'(?GL_LINES),
+		     gl:color3fv(Color),
+		     ?E(1), ?E(2), ?E(2), ?E(3), ?E(3), ?E(4),
+		     ?E(4), ?E(5), ?E(5), ?E(8), ?E(8), ?E(3),
+		     ?E(1), ?E(6), ?E(6), ?E(7), ?E(7), ?E(2),
+		     ?E(6), ?E(5), ?E(5), ?E(8), ?E(8), ?E(7),
+		     ?E(6), ?E(1), ?E(1), ?E(4), ?E(4), ?E(5),
+		     ?E(7), ?E(2), ?E(3), ?E(8),
+		     gl:'end'()
+	     end).

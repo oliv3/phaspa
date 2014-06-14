@@ -56,8 +56,9 @@ handle_call(draw, _From, #state{size=Size, rot=Rot, fov=FOV,
     wxGLCanvas:setCurrent(GL),
     set_view(Size, Rot, FOV),
     wirecube:draw(),
-    gl:scalef(Scale, Scale, Scale),
+    %% gl:scalef(Scale, Scale, Scale),
     draw_cb(State),
+    particle_system:draw(),
     wxGLCanvas:swapBuffers(GL),
     {reply, ok, State}.
 
@@ -171,6 +172,9 @@ set_view({Width, Height}, Rot, FOV) ->
     gl:clearDepth(?ZMAX),
 
     gl:matrixMode(?GL_PROJECTION),
+    gl:loadIdentity(),
+
+    gl:matrixMode(?GL_MODELVIEW),
     gl:loadIdentity(),
 
     Ratio = Width / Height,

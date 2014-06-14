@@ -11,9 +11,11 @@
 
 %% wx_object API
 -export([new/1]).
+-export([get_gl/0]).
 
 %% wx_object callbacks
--export([init/1, handle_info/2, handle_event/2, terminate/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, handle_event/2]).
+-export([code_change/3, terminate/2]).
 
 -behaviour(wx_object).
 
@@ -29,6 +31,9 @@
 new(Wx) ->
     Size = {640, 480},
     wx_object:start_link(?SERVER, [Wx, Size], []).
+
+get_gl() ->
+    wx_object:call(?SERVER, get_gl).
 
 
 init([Wx, Size]) ->
@@ -76,6 +81,14 @@ create_window(Wx, Size) ->
     {Frame, GL}.
 
 
+handle_call(get_gl, _From, #state{gl = GL} = State) ->
+    {reply, GL, State}.
+
+
+handle_cast(_Msg, State) ->
+    {noreply, State}.
+
+
 handle_info({'EXIT', _Pid, _Reason}, State) ->
     ?D_F("process ~p died: ~p, exiting", [_Pid, _Reason]),
     {stop, normal, State}.
@@ -106,3 +119,7 @@ handle_event(#wx{id=?ABOUT}, #state{frame=Frame} = State) ->
 terminate(_Reason, #state{gl=GL}) ->
     ?D_TERMINATE(_Reason),
     wxGLCanvas:destroy(GL).
+
+
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.
