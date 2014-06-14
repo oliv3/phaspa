@@ -45,7 +45,7 @@
 -define(ZMAX, 1000.0).
 -define(SCALE_STEP, 0.2).
 
--define(MONO_C, {1.0, 1.0, 1.0}).
+-define(WHITE, {1.0, 1.0, 1.0}).
 
 
 draw() ->
@@ -209,7 +209,7 @@ draw_cb2(Samples, #state{mode=Mode, spline=Spline, color=Color}) ->
     gl:'begin'(Mode),
     case Color of
 	false ->
-	    draw_cb3(Mono2, ?MONO_C);
+	    draw_cb3(Mono2, ?WHITE);
 	true ->
 	    draw_cb3(Mono2, Mono2)
     end,
