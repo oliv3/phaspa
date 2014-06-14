@@ -210,28 +210,29 @@ draw_cb2(Samples, #state{mode=Mode, spline=Spline, color=Color}) ->
 		false ->
 		    Mono1
 	    end,
+
+    Particles = case Color of
+		    true ->
+			make_particles(Mono2, Mono2);
+		    false ->
+			make_particles(Mono2, ?WHITE)
+		end,
+
     gl:pointSize(?SIZE),
     gl:lineWidth(?SIZE),
     gl:'begin'(Mode),
-    case Color of
-	false ->
-	    draw_cb3(Mono2, ?WHITE);
-	true ->
-	    draw_cb3(Mono2, Mono2)
-    end,
+    [draw_point(Tuple) || Tuple <- Particles],
     gl:'end'().
 
 
-draw_cb3([Point | Points], [Color | Colors]) ->
-    add_point(Point, color(Color)),
-    draw_cb3(Points, Colors);
-draw_cb3([], []) ->
-    ok;
-draw_cb3(Points, Color) ->
-    [add_point(Point, Color) || Point <- Points].
+make_particles(Points, Color) when is_tuple(Color) ->
+    [{Point, Color} || Point <- Points];
+make_particles(Points, Colors0) ->
+    Colors = [color(P) || P <- Colors0],
+    lists:zip(Points, Colors).
 
 
-add_point(Point, Color) ->
+draw_point({Point, Color}) ->
     gl:color3fv(Color),
     gl:vertex3fv(Point).
 
