@@ -20,6 +20,7 @@ start() ->
     process_flag(trap_exit, true),
     Wx = wx:new(),
     win:new(Wx),
+    particle_system:start_link(), %% TODO Wx, GL
     spline:new(),
     %% recorder:new(Wx),
     rec:new(),
@@ -31,6 +32,7 @@ start() ->
     rec:destroy(),
     spline:destroy(),
     %% recorder:destroy(),
+    particle_system:stop(),
     wx:destroy().
 
 
