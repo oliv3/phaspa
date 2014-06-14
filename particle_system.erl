@@ -144,6 +144,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 draw_cb() ->
     gl:pushMatrix(),
-    gl:scalef(1.1, 1.1, 1.1),
+    R = random:uniform() * 0.1 + 1,
+    gl:scalef(R, R, R),
     wirecube:draw({0.0, 0.0, 1.0}),
     gl:popMatrix().
