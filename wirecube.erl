@@ -4,7 +4,7 @@
 %%-include_lib("wx/include/gl.hrl"). 
 -include("gui.hrl").
 
--export([draw/0]). %% axes/1, plane/1, cube/1, textured/2]).
+-export([draw/0, draw/1]). %% axes/1, plane/1, cube/1, textured/2]).
 
 
 -define(ZERO, 0.0).
@@ -31,10 +31,13 @@ set_model_view() ->
 
 
 draw() ->
+    draw({?ZERO, ?ONE/2, ?ZERO}).
+
+draw(Color) ->
     set_model_view(),
     gl:lineWidth(1.0),
     gl:'begin'(?GL_LINES),
-    gl:color3f(?ZERO, ?ONE/2, ?ZERO),
+    gl:color3fv(Color),
     ?E(1), ?E(2), ?E(2), ?E(3), ?E(3), ?E(4),
     ?E(4), ?E(5), ?E(5), ?E(8), ?E(8), ?E(3),
     ?E(1), ?E(6), ?E(6), ?E(7), ?E(7), ?E(2),
