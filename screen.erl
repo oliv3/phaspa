@@ -38,7 +38,9 @@
 	  scale = 1.5,
 
 	  %% drawing mode
-	  mode = ?GL_LINE_STRIP,
+	  %% mode = ?GL_LINE_STRIP,
+	  mode = ?GL_POINTS,
+
 	  color = true,
 	  spline = true
 	 }).
@@ -169,7 +171,7 @@ set_view({Width, Height}, Rot, FOV) ->
     gl:depthFunc(?GL_LEQUAL),
     gl:enable(?GL_DEPTH_TEST),
     gl:enable(?GL_BLEND),
-    gl:clearColor(10/255, 30/255, 10/255, 1.0),
+    gl:clearColor(5/255, 10/255, 5/255, 1.0),
     gl:clearDepth(?ZMAX),
 
     gl:matrixMode(?GL_PROJECTION),
