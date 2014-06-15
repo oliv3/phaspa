@@ -2,6 +2,7 @@ all: erlang c
 
 erlang:
 	@erl -make all
+
 c: rec spline
 
 run:
