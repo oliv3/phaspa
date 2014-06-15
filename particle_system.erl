@@ -23,8 +23,10 @@
 
 -record(state, {pids = []}).
 
--define(TTL, 2000). %% Time To Leave, 3secs.
--define(STEP, 200).
+-define(TTL, 2000). %% Time To Leave
+-define(STEP, 300).
+-define(FACT, 0.5).
+
 -record(cloud, {age = 0, particles}).
 
 %%%===================================================================
@@ -208,8 +210,6 @@ make_particles([{Pos, Col} | Ps], Acc) ->
     P = #{pos => Pos, vel => vel(Pos), col => Col},
     make_particles(Ps, [P | Acc]).
 
-
--define(FACT, 0.1).
 
 vel({X, Y, Z}) ->
     {X * ?FACT, Y * ?FACT, Z * ?FACT}.
