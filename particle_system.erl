@@ -23,7 +23,7 @@
 
 -record(state, {pids = []}).
 
--define(TTL, 2000). %% Time To Leave
+-define(TTL, 2000). %% Time To Live
 -define(STEP, 300).
 -define(FACT, 0.5).
 
