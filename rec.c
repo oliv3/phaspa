@@ -6,10 +6,10 @@
 // #undef DEBUG
 #include "debug.h"
 
-#define BUF_SIZE 256
+#define BUF_SIZE   512
 
 /* TODO: pass INSIZE it as an option to start */
-#define INSIZE	   512
+#define INSIZE	   256
 #define CHANNELS   1
 #define NSAMPLES   (INSIZE*CHANNELS)
 #define ABUFF_SIZE (NSAMPLES * sizeof(float))
