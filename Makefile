@@ -15,7 +15,7 @@ ERLC_FLAGS = +debug_info +native +inline_list_funcs +inline
 	erlc $(ERLC_FLAGS) $< -o $@
 
 # ---- C
-ERL_LIB=/usr/local/lib/erlang/lib/erl_interface-3.7.16
+ERL_LIB=/usr/local/lib/erlang/lib/erl_interface-3.7.17
 CPPFLAGS=-I$(ERL_LIB)/include
 CFLAGS=-O3 -Wall -Werror
 LDFLAGS=-L$(ERL_LIB)/lib `pkg-config libpulse-simple --libs` -lerl_interface -lei -lpthread
